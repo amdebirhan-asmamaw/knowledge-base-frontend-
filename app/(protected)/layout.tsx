@@ -40,7 +40,9 @@ export default function PublicLayout({
       </div>
       {/* Spacer to offset the fixed header height */}
       <div className="h-16 print:hidden" />
-      <PolicyGuard>{children}</PolicyGuard>
+      <PolicyGuard>
+        <div className="min-h-[calc(100vh-4rem)]">{children}</div>
+      </PolicyGuard>
       <Footer />
     </>
   );

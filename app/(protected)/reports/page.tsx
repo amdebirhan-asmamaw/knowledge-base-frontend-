@@ -12,6 +12,7 @@ import { listDepartments, type Department } from "@/lib/api/departments.api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/PageShell";
 import {
   FileText,
   Calendar,
@@ -145,7 +146,7 @@ function ReportDetailView({
       </div>
 
       <Card className="overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-primary" />
+        <div className="h-0.5 bg-primary" />
         <div className="p-6 space-y-4">
           <div>
             <h1 className="text-lg font-bold text-foreground">
@@ -263,36 +264,24 @@ export default function PublicReportsPage() {
   // ─── Detail view ──────────────────────────────────────────────────────────
   if (selectedReport) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-          <ReportDetailView
-            report={selectedReport}
-            onBack={() => setSelectedReport(null)}
-          />
-        </main>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <ReportDetailView
+          report={selectedReport}
+          onBack={() => setSelectedReport(null)}
+        />
       </div>
     );
   }
 
   // ─── List view ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background">
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-2">
-          <FileText className="w-7 h-7 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">
-            Reports
-          </h1>
-          {total > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {total}
-            </Badge>
-          )}
-        </div>
-        <p className="text-muted-foreground mb-8 text-base">
-          Published reports from your organization.
-        </p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <PageHeader
+        icon={<FileText className="w-5 h-5" style={{ color: "#2563eb" }} />}
+        title="Reports"
+        subtitle="Published reports from your organization."
+        badge={total > 0 ? <Badge variant="secondary" className="text-xs">{total}</Badge> : undefined}
+      />
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -411,7 +400,6 @@ export default function PublicReportsPage() {
             </Button>
           </div>
         )}
-      </main>
     </div>
   );
 }

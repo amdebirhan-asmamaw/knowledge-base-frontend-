@@ -18,8 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { PageHeader } from "@/components/PageShell";
 import {
-  Lightbulb, Plus, Loader2, AlertCircle, Building2, ChevronLeft,
+  Lightbulb, Plus, Loader2, AlertCircle, Building2, ChevronLeft, ChevronRight,
   Save, Send, Clock, User, Download, X, Filter, Users,
 } from "lucide-react";
 
@@ -116,7 +117,7 @@ function InitiativeDetail({ item, onBack, onEdit, isOwner, userId }: {
         </div>
       </div>
       <Card className="overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-amber-600" />
+        <div className="h-0.5 bg-amber-500" />
         <div className="p-6 space-y-5">
           <div>
             <h1 className="text-lg font-bold">{item.title}</h1>
@@ -241,7 +242,7 @@ function InitiativeForm({ item, departments, userDeptId, onSave, onCancel }: {
     <div className="space-y-4 animate-in fade-in duration-300">
       <Button variant="ghost" size="sm" className="gap-1 -ml-2 text-muted-foreground" onClick={onCancel}><ChevronLeft className="w-4 h-4" /> Cancel</Button>
       <Card className="overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-amber-600" />
+        <div className="h-0.5 bg-amber-500" />
         <div className="px-6 py-4 border-b bg-secondary/30 flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold">{isEdit ? "Edit Initiative" : "New Initiative"}</h2>
@@ -342,7 +343,7 @@ export default function EmployeeInitiativesPage() {
   if (view === "detail" && selected) {
     const isOwner = selected.author?._id === user?.id;
     return (
-      <div className="max-w-3xl mx-auto pt-6">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <InitiativeDetail
           item={selected}
           onBack={() => { setSelected(null); setView("list"); }}
@@ -356,7 +357,7 @@ export default function EmployeeInitiativesPage() {
 
   if (view === "form") {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <InitiativeForm
           item={editing}
           departments={departments}
@@ -370,24 +371,21 @@ export default function EmployeeInitiativesPage() {
   const hasFilters = !!filterStatus;
 
   return (
-    <div className="max-w-3xl mx-auto pt-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10">
-            <Lightbulb className="w-5 h-5 text-amber-600" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Initiatives</h1>
-            <p className="text-sm text-muted-foreground">Share your ideas to improve the company</p>
-          </div>
-        </div>
-        <Button size="sm" className="gap-1.5" onClick={() => { setEditing(null); setView("form"); }}>
-          <Plus className="w-4 h-4" /> New Initiative
-        </Button>
-      </div>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <PageHeader
+        icon={<Lightbulb className="w-5 h-5 text-amber-600" />}
+        iconStyle={{ background: "#fef3c7" }}
+        title="Initiatives"
+        subtitle="Share your ideas to improve the company"
+        action={
+          <Button size="sm" className="gap-1.5" onClick={() => { setEditing(null); setView("form"); }}>
+            <Plus className="w-4 h-4" /> New Initiative
+          </Button>
+        }
+      />
 
       <Card className="overflow-hidden">
-        <div className="h-0.5 bg-gradient-to-r from-amber-500 via-orange-400 to-amber-600" />
+        <div className="h-0.5 bg-amber-500" />
         <div className="px-4 py-3 flex items-center gap-3 flex-wrap">
           <Filter className="w-3.5 h-3.5 text-muted-foreground" />
           <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as InitiativeStatus | ""); setPage(1); }}
@@ -413,9 +411,13 @@ export default function EmployeeInitiativesPage() {
       )}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="gap-1">
+            <ChevronLeft className="w-3.5 h-3.5" /> Previous
+          </Button>
           <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="gap-1">
+            Next <ChevronRight className="w-3.5 h-3.5" />
+          </Button>
         </div>
       )}
     </div>

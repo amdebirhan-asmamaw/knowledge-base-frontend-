@@ -2,12 +2,19 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { listPublicSurveys, getPublicSurvey, submitSurveyResponse, getSurveySummary, type Survey, type SurveyField, type SurveyCategory } from "@/lib/api/surveys.api";
+import {
+  listPublicSurveys, getPublicSurvey, submitSurveyResponse,
+  type Survey, type SurveyField, type SurveyCategory,
+} from "@/lib/api/surveys.api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, ChevronLeft, Loader2, AlertCircle, Send, CheckCircle2, Clock, Users, BarChart3 } from "lucide-react";
+import { PageHeader } from "@/components/PageShell";
+import {
+  ClipboardList, ChevronLeft, ChevronRight, Loader2, AlertCircle,
+  Send, CheckCircle2, Clock, Users,
+} from "lucide-react";
 
 const CATEGORY_COLORS: Record<SurveyCategory, string> = {
   feedback: "bg-blue-50 text-blue-700 border-blue-200",
@@ -34,39 +41,70 @@ export default function PublicSurveysPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto pt-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-primary/10"><ClipboardList className="w-5 h-5 text-primary" /></div>
-        <div><h1 className="text-xl font-bold">Surveys</h1><p className="text-sm text-muted-foreground">Share your feedback and ideas</p></div>
-      </div>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <PageHeader
+        icon={<ClipboardList className="w-5 h-5" style={{ color: "#2563eb" }} />}
+        title="Surveys"
+        subtitle="Share your feedback and ideas"
+      />
 
       {isLoading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
       ) : error ? (
-        <Card className="p-6 text-center text-red-600"><AlertCircle className="w-5 h-5 mx-auto mb-2" />Failed to load surveys</Card>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+          <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
+          <p className="text-sm text-red-700">Failed to load surveys.</p>
+        </div>
       ) : surveys.length === 0 ? (
-        <Card className="p-12 text-center"><ClipboardList className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No surveys available right now</p></Card>
+        <div className="rounded-xl border border-dashed border-border p-16 text-center">
+          <ClipboardList className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">No surveys available right now.</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {surveys.map((s) => (
-            <Card key={s._id} className="p-5 cursor-pointer hover:border-primary/30 hover:shadow-md transition-all" onClick={() => setSelectedId(s._id)}>
+            <Card
+              key={s._id}
+              className="p-5 cursor-pointer hover:border-primary/30 hover:shadow-md transition-all group"
+              onClick={() => setSelectedId(s._id)}
+            >
               <div className="flex items-center gap-2 mb-1.5">
-                <h3 className="font-semibold text-sm">{s.title}</h3>
-                <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[s.category]}`}>{s.category}</Badge>
+                <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
+                  {s.title}
+                </h3>
+                <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[s.category]}`}>
+                  {s.category}
+                </Badge>
               </div>
-              {s.description && <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{s.description}</p>}
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              {s.description && (
+                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{s.description}</p>
+              )}
+              <div className="flex items-center flex-wrap gap-4 text-xs text-muted-foreground">
                 <span>{s.fields.length} questions</span>
-                {s.settings.closesAt && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Closes {new Date(s.settings.closesAt).toLocaleDateString()}</span>}
-                <span className="flex items-center gap-1"><Users className="w-3 h-3" />{s.responsesCount} responses</span>
+                {s.settings.closesAt && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Closes {new Date(s.settings.closesAt).toLocaleDateString()}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />{s.responsesCount} responses
+                </span>
               </div>
             </Card>
           ))}
+
           {pagination.totalPages > 1 && (
-            <div className="flex justify-center gap-2 pt-4">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-              <span className="text-sm text-muted-foreground py-2">Page {page} of {pagination.totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="gap-1">
+                <ChevronLeft className="w-3.5 h-3.5" /> Previous
+              </Button>
+              <span className="text-xs text-muted-foreground">Page {page} of {pagination.totalPages}</span>
+              <Button variant="outline" size="sm" disabled={page >= pagination.totalPages} onClick={() => setPage((p) => p + 1)} className="gap-1">
+                Next <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
             </div>
           )}
         </div>
@@ -78,15 +116,12 @@ export default function PublicSurveysPage() {
 // ─── Survey Filler ────────────────────────────────────────────────────────────
 
 function SurveyFiller({ surveyId, onBack }: { surveyId: string; onBack: () => void }) {
-  const { data: survey, isLoading } = useQuery({ queryKey: ["surveys", "public", surveyId], queryFn: () => getPublicSurvey(surveyId) });
-  const { data: summary } = useQuery({
-    queryKey: ["surveys", "public", surveyId, "summary"],
-    queryFn: () => getSurveySummary(surveyId),
-    enabled: false,
+  const { data: survey, isLoading } = useQuery({
+    queryKey: ["surveys", "public", surveyId],
+    queryFn: () => getPublicSurvey(surveyId),
   });
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [submitted, setSubmitted] = useState(false);
-  const [showResults, setShowResults] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const submit = useMutation({
@@ -96,23 +131,28 @@ function SurveyFiller({ surveyId, onBack }: { surveyId: string; onBack: () => vo
     },
     onSuccess: () => setSubmitted(true),
     onError: (err: any) => {
-      const msg = err?.response?.data?.message || err?.message || "Failed to submit";
-      setSubmitError(msg);
+      setSubmitError(err?.response?.data?.message || err?.message || "Failed to submit");
     },
   });
 
-  if (isLoading || !survey) return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  if (isLoading || !survey) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
-      <div className="max-w-2xl mx-auto pt-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Card className="p-12 text-center">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
           <h2 className="text-lg font-bold mb-2">Thank you!</h2>
           <p className="text-muted-foreground mb-6">Your response has been recorded.</p>
-          <div className="flex justify-center gap-3">
-            <Button onClick={onBack}>Back to Surveys</Button>
-          </div>
+          <Button onClick={onBack}>Back to Surveys</Button>
         </Card>
       </div>
     );
@@ -121,17 +161,23 @@ function SurveyFiller({ surveyId, onBack }: { surveyId: string; onBack: () => vo
   const sorted = [...survey.fields].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="max-w-2xl mx-auto pt-6 space-y-5">
-      <Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4 mr-1" />Back</Button>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Button variant="ghost" size="sm" className="-ml-2 mb-6 gap-1 text-muted-foreground" onClick={onBack}>
+        <ChevronLeft className="w-4 h-4" /> Back to Surveys
+      </Button>
 
-      <Card className="overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
+      <Card className="overflow-hidden mb-5">
+        <div className="h-0.5 bg-primary" />
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[survey.category]}`}>{survey.category}</Badge>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[survey.category]}`}>
+              {survey.category}
+            </Badge>
           </div>
-          <h2 className="text-lg font-bold">{survey.title}</h2>
-          {survey.description && <p className="text-sm text-muted-foreground mt-1">{survey.description}</p>}
+          <h2 className="text-lg font-bold text-foreground">{survey.title}</h2>
+          {survey.description && (
+            <p className="text-sm text-muted-foreground mt-1">{survey.description}</p>
+          )}
         </div>
       </Card>
 
@@ -139,44 +185,67 @@ function SurveyFiller({ surveyId, onBack }: { surveyId: string; onBack: () => vo
         {sorted.map((field) => (
           <Card key={field.id} className="p-5">
             <label className="text-sm font-medium mb-2 block">
-              {field.label} {field.required && <span className="text-red-500">*</span>}
+              {field.label}{" "}
+              {field.required && <span className="text-red-500">*</span>}
             </label>
-            <FieldInput field={field} value={answers[field.id]} onChange={(v) => setAnswers((a) => ({ ...a, [field.id]: v }))} />
+            <FieldInput
+              field={field}
+              value={answers[field.id]}
+              onChange={(v) => setAnswers((a) => ({ ...a, [field.id]: v }))}
+            />
           </Card>
         ))}
       </div>
 
-      {submitError && <Card className="p-4 border-red-200 bg-red-50 text-red-600 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" />{submitError}</Card>}
+      {submitError && (
+        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />{submitError}
+        </div>
+      )}
 
-      <Button className="w-full gap-2" size="lg" onClick={() => { setSubmitError(null); submit.mutate(); }} disabled={submit.isPending}>
-        {submit.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}Submit Response
+      <Button
+        className="w-full gap-2 mt-5"
+        size="lg"
+        onClick={() => { setSubmitError(null); submit.mutate(); }}
+        disabled={submit.isPending}
+      >
+        {submit.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+        Submit Response
       </Button>
     </div>
   );
 }
 
-// ─── Dynamic field renderer ──────────────────────────────────────────────────
+// ─── Dynamic field renderer ───────────────────────────────────────────────────
 
 function FieldInput({ field, value, onChange }: { field: SurveyField; value: unknown; onChange: (v: unknown) => void }) {
   switch (field.type) {
     case "text":
       return <Input placeholder={field.placeholder} value={(value as string) || ""} onChange={(e) => onChange(e.target.value)} />;
     case "textarea":
-      return <textarea className="w-full border rounded-lg px-3 py-2 text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-ring" rows={4} placeholder={field.placeholder} value={(value as string) || ""} onChange={(e) => onChange(e.target.value)} />;
+      return (
+        <textarea
+          className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+          rows={4}
+          placeholder={field.placeholder}
+          value={(value as string) || ""}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
     case "number":
       return <Input type="number" placeholder={field.placeholder} value={(value as string) || ""} onChange={(e) => onChange(e.target.value)} min={field.validation.min} max={field.validation.max} />;
     case "date":
       return <Input type="date" value={(value as string) || ""} onChange={(e) => onChange(e.target.value)} />;
     case "select":
       return (
-        <select className="w-full border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring" value={(value as string) || ""} onChange={(e) => onChange(e.target.value)}>
+        <select className="w-full border border-input rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring" value={(value as string) || ""} onChange={(e) => onChange(e.target.value)}>
           <option value="">{field.placeholder || "Select..."}</option>
           {field.options.map((o) => <option key={o.id} value={o.value}>{o.label}</option>)}
         </select>
       );
     case "multi-select":
       return (
-        <select multiple className="w-full border rounded-lg px-3 py-2 text-sm bg-background min-h-[100px] focus:outline-none focus:ring-1 focus:ring-ring" value={(value as string[]) || []} onChange={(e) => onChange(Array.from(e.target.selectedOptions, (o) => o.value))}>
+        <select multiple className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background min-h-[100px] focus:outline-none focus:ring-1 focus:ring-ring" value={(value as string[]) || []} onChange={(e) => onChange(Array.from(e.target.selectedOptions, (o) => o.value))}>
           {field.options.map((o) => <option key={o.id} value={o.value}>{o.label}</option>)}
         </select>
       );
@@ -185,7 +254,8 @@ function FieldInput({ field, value, onChange }: { field: SurveyField; value: unk
         <div className="space-y-2">
           {field.options.map((o) => (
             <label key={o.id} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="radio" name={field.id} value={o.value} checked={value === o.value} onChange={() => onChange(o.value)} className="accent-primary" />{o.label}
+              <input type="radio" name={field.id} value={o.value} checked={value === o.value} onChange={() => onChange(o.value)} className="accent-primary" />
+              {o.label}
             </label>
           ))}
         </div>
@@ -193,15 +263,26 @@ function FieldInput({ field, value, onChange }: { field: SurveyField; value: unk
     case "checkbox":
       return (
         <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} className="accent-primary" />{field.placeholder || "Yes"}
+          <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} className="accent-primary" />
+          {field.placeholder || "Yes"}
         </label>
       );
     case "rating":
       return (
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} type="button" onClick={() => onChange(n)}
-              className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all ${value === n ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/50"}`}>{n}</button>
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(n)}
+              className={`w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all ${
+                value === n
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              {n}
+            </button>
           ))}
         </div>
       );
