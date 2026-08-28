@@ -6,13 +6,15 @@ export interface DepartmentHead {
   _id: string;
   name: string;
   email: string;
+  position?: string;
 }
 
 export interface DepartmentMember {
   _id: string;
   name: string;
   email: string;
-  position: string;
+  position?: string;
+  phone?: string;
   role: { _id: string; name: string; description?: string; permissions?: string[] } | null;
   isActive: boolean;
 }
@@ -32,7 +34,7 @@ export interface DepartmentDetail extends Department {
   members: DepartmentMember[];
 }
 
-// ─── CRUD ─────────────────────────────────────────────────────────────────────
+// ─── CRUD & Lifecycle APIs ───────────────────────────────────────────────────
 
 export const listDepartments = (params?: {
   search?: string;
@@ -61,5 +63,37 @@ export const updateDepartment = (
 ): Promise<Department> =>
   apiAxios.put(`/departments/${id}`, data).then((r) => r.data.data);
 
-export const deleteDepartment = (id: string): Promise<void> =>
-  apiAxios.delete(`/departments/${id}`).then(() => undefined);
+export const setDepartmentHead = (
+  deptId: string,
+  headId: string | null
+): Promise<Department> =>
+  apiAxios.patch(`/departments/${deptId}/head`, { headId }).then((r) => r.data.data);
+
+export const assignDepartmentMembers = (
+  deptId: string,
+  userIds: string[]
+): Promise<DepartmentDetail> =>
+  apiAxios.post(`/departments/${deptId}/members`, { userIds }).then((r) => r.data.data);
+
+export const removeDepartmentMember = (
+  deptId: string,
+  userId: string
+): Promise<DepartmentDetail> =>
+  apiAxios.delete(`/departments/${deptId}/members/${userId}`).then((r) => r.data.data);
+
+export const transferDepartmentMembers = (
+  deptId: string,
+  data: { targetDepartmentId: string; userIds?: string[] }
+): Promise<{ source: DepartmentDetail; target: DepartmentDetail }> =>
+  apiAxios.post(`/departments/${deptId}/transfer-members`, data).then((r) => r.data.data);
+
+export const reactivateDepartment = (deptId: string): Promise<Department> =>
+  apiAxios.post(`/departments/${deptId}/activate`).then((r) => r.data.data);
+
+export const deleteDepartment = (
+  id: string,
+  reassignTo?: string
+): Promise<void> =>
+  apiAxios
+    .delete(`/departments/${id}`, { params: reassignTo ? { reassignTo } : undefined })
+    .then(() => undefined);

@@ -21,6 +21,7 @@ export const queryKeys = {
     all: ["departments"] as const,
     list: (filters: Record<string, unknown>) =>
       ["departments", "list", filters] as const,
+    detail: (id: string) => ["departments", "detail", id] as const,
   },
   documents: {
     all: ["documents"] as const,
