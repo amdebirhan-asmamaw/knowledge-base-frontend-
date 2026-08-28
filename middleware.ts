@@ -7,14 +7,10 @@ export default withAuth(
     const token = req.nextauth.token;
     const role = token?.role as string | undefined;
 
-    // Admin area: must be authenticated AND have admin role
+    // Admin area: must be authenticated
     if (pathname.startsWith("/admin")) {
       if (!token) {
-        return NextResponse.redirect(new URL("/auth/login", req.url));
-      }
-      if (role !== "admin") {
-        // Authenticated employee without admin → redirect to knowledge base
-        return NextResponse.redirect(new URL("/", req.url));
+        return NextResponse.redirect(new URL("/auth/login?from=" + encodeURIComponent(pathname), req.url));
       }
     }
 

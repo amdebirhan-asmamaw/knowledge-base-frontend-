@@ -13,8 +13,7 @@ export interface Employee {
   _id: string;
   name: string;
   email: string;
-  role: { _id: string; name: string } | null;
-  permissions?: string[];
+  role: { _id: string; name: string; description?: string; permissions?: string[] } | null;
   department: { _id: string; name: string } | null;
   position: string;
   isActive: boolean;

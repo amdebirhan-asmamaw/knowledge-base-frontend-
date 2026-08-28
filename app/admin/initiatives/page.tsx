@@ -303,8 +303,8 @@ function InitiativeForm({ item, departments, userDeptId, onSave, onCancel }: {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminInitiativesPage() {
-  const { user, hasPermission } = useAuth();
-  const canManage = hasPermission("initiatives:manage");
+  const { user, hasPermission, hasScopePermission } = useAuth();
+  const canManage = hasScopePermission("initiatives", "update", "dept") || hasScopePermission("initiatives", "delete", "all");
   const [view, setView] = useState<"list" | "detail" | "form" | "config">("list");
   const [selected, setSelected] = useState<Initiative | null>(null);
   const [editing, setEditing] = useState<Initiative | null>(null);

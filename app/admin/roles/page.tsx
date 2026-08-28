@@ -357,7 +357,7 @@ export default function AdminRolesPage() {
 
   // ——— Derived state ——————————————————————————————————————————————————————————
   const visible = search
-    ? roles.filter((r) => r.name.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase()))
+    ? roles.filter((r: Role) => r.name.toLowerCase().includes(search.toLowerCase()) || (r.description ?? "").toLowerCase().includes(search.toLowerCase()))
     : roles;
     
   const error = rolesError;
@@ -418,7 +418,7 @@ export default function AdminRolesPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {visible.map((role) => (
+          {visible.map((role: Role) => (
             <RoleCard
               key={role._id}
               role={role}

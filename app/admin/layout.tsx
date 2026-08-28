@@ -65,6 +65,7 @@ interface NavSubItem {
   label: string;
   icon?: React.ElementType;
   permission?: Permission;
+  scopePermission?: { domain: string; action: string };
 }
 
 interface NavItem {
@@ -72,6 +73,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   permission?: Permission;
+  scopePermission?: { domain: string; action: string };
   children?: NavSubItem[];
 }
 
@@ -94,19 +96,19 @@ const navGroups: NavGroup[] = [
         href: "/admin/structure",
         label: "Knowledge Base",
         icon: BookOpen,
-        permission: "structure:manage",
+        permission: "structure:read",
         children: [
           {
             href: "/admin/structure",
             label: "Categories & Sections",
             icon: Folder,
-            permission: "structure:manage",
+            permission: "structure:read",
           },
           {
             href: "/admin/content",
             label: "Documents",
             icon: FileText,
-            permission: "content:manage",
+            scopePermission: { domain: "documents", action: "read" },
           },
         ],
       },
@@ -114,13 +116,13 @@ const navGroups: NavGroup[] = [
         href: "/admin/faq",
         label: "FAQs",
         icon: HelpCircle,
-        permission: "faq:manage",
+        permission: "faq:read",
       },
       {
         href: "/admin/policies",
         label: "Policies",
         icon: ScrollText,
-        permission: "policies:manage",
+        permission: "policies:read",
       },
     ],
   },
@@ -131,25 +133,25 @@ const navGroups: NavGroup[] = [
         href: "/admin/employees",
         label: "Employees",
         icon: UserCheck,
-        permission: "employees:manage",
+        scopePermission: { domain: "employees", action: "read" },
       },
       {
         href: "/admin/roles",
         label: "Roles",
         icon: ShieldCheck,
-        permission: "employees:manage", // Managed by those who manage employees
+        permission: "roles:read",
       },
       {
         href: "/admin/departments",
         label: "Departments",
         icon: Building2,
-        permission: "departments:manage",
+        permission: "departments:read",
       },
       {
         href: "/admin/clients",
         label: "Clients",
         icon: Users,
-        permission: "clients:view",
+        scopePermission: { domain: "clients", action: "read" },
       },
     ],
   },
@@ -160,25 +162,25 @@ const navGroups: NavGroup[] = [
         href: "/admin/reports",
         label: "Reports",
         icon: BarChart3,
-        permission: "reports:view",
+        scopePermission: { domain: "reports", action: "read" },
       },
       {
         href: "/admin/meetings",
         label: "Meeting Minutes",
         icon: CalendarCheck,
-        permission: "meetings:manage",
+        scopePermission: { domain: "meetings", action: "read" },
       },
       {
         href: "/admin/surveys",
         label: "Surveys",
         icon: ClipboardList,
-        permission: "surveys:manage",
+        scopePermission: { domain: "surveys", action: "read" },
       },
       {
         href: "/admin/initiatives",
         label: "Initiatives",
         icon: Lightbulb,
-        permission: "initiatives:manage",
+        scopePermission: { domain: "initiatives", action: "read" },
       },
     ],
   },
@@ -189,7 +191,20 @@ const navGroups: NavGroup[] = [
 function AdminSidebar() {
   const pathname = usePathname();
   const { open } = useAdminAI();
-  const { hasPermission } = useAuth();
+  const { hasPermission, hasScopePermission } = useAuth();
+
+  const isItemVisible = (item: {
+    permission?: Permission;
+    scopePermission?: { domain: string; action: string };
+  }) => {
+    if (item.permission && !hasPermission(item.permission)) return false;
+    if (
+      item.scopePermission &&
+      !hasScopePermission(item.scopePermission.domain, item.scopePermission.action, "own")
+    )
+      return false;
+    return true;
+  };
 
   // Auto-expand collapsible if any child is active
   const isKBActive =
@@ -221,9 +236,7 @@ function AdminSidebar() {
 
       <SidebarContent>
         {navGroups.map((group) => {
-          const visibleItems = group.items.filter(
-            (item) => !item.permission || hasPermission(item.permission),
-          );
+          const visibleItems = group.items.filter(isItemVisible);
           if (visibleItems.length === 0) return null;
           return (
             <SidebarGroup key={group.label}>
@@ -234,9 +247,7 @@ function AdminSidebar() {
 
                   // ── Collapsible nested item ──
                   if (children && children.length > 0) {
-                    const visibleChildren = children.filter(
-                      (c) => !c.permission || hasPermission(c.permission),
-                    );
+                    const visibleChildren = children.filter(isItemVisible);
                     if (visibleChildren.length === 0) return null;
 
                     return (

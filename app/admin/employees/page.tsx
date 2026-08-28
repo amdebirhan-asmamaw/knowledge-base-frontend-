@@ -471,8 +471,6 @@ function EmployeeRow({
     finally { setIsDeactivating(false); }
   };
 
-  const isProtected = employee.role?.name === "admin";
-
   return (
     <>
       <tr className={`border-b border-border hover:bg-secondary/30 transition-colors ${!employee.isActive ? "opacity-50" : ""}`}>
@@ -513,17 +511,13 @@ function EmployeeRow({
 
         {/* Role */}
         <td className="px-4 py-3">
-          {isProtected ? (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2 py-0.5">
-              <ShieldCheck className="w-3 h-3" /> Super Admin
-            </span>
-          ) : employee.role?.name === "admin" || employee.role?.name === "Admin" ? (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
-              <ShieldCheck className="w-3 h-3" /> {employee.role?.name || "Admin"}
+          {employee.role?.name ? (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5">
+              <ShieldCheck className="w-3 h-3" /> {employee.role.name}
             </span>
           ) : (
             <span className="text-xs font-medium text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
-              {employee.role?.name || "User"}
+              No Role
             </span>
           )}
         </td>
@@ -543,37 +537,33 @@ function EmployeeRow({
 
         {/* Actions */}
         <td className="px-4 py-3">
-          {isProtected ? (
-            <span className="text-xs text-muted-foreground italic">Protected</span>
-          ) : (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline" size="sm"
-                className="h-7 text-xs gap-1"
-                onClick={() => setShowEdit(true)}
-                title="Edit employee"
-              >
-                <Edit2 className="w-3 h-3" /> Edit
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline" size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() => setShowEdit(true)}
+              title="Edit employee"
+            >
+              <Edit2 className="w-3 h-3" /> Edit
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAssign(true)} title="Assign clients">
+              <UserCheck className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="outline" size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() => setShowResetPw(true)}
+              title="Reset password"
+            >
+              <KeyRound className="w-3 h-3" />
+            </Button>
+            {employee.isActive && (
+              <Button variant="ghost" size="icon-sm" onClick={handleDeactivate} disabled={isDeactivating}
+                className="text-muted-foreground hover:text-red-600 hover:bg-red-50">
+                {isDeactivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
               </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAssign(true)} title="Assign clients">
-                <UserCheck className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="outline" size="sm"
-                className="h-7 text-xs gap-1"
-                onClick={() => setShowResetPw(true)}
-                title="Reset password"
-              >
-                <KeyRound className="w-3 h-3" />
-              </Button>
-              {employee.isActive && (
-                <Button variant="ghost" size="icon-sm" onClick={handleDeactivate} disabled={isDeactivating}
-                  className="text-muted-foreground hover:text-red-600 hover:bg-red-50">
-                  {isDeactivating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                </Button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </td>
       </tr>
 
@@ -613,7 +603,7 @@ export default function AdminEmployeesPage() {
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("active");
-  const [filterRole, setFilterRole] = useState<"all" | "admin" | "user">("all");
+  const [filterRole, setFilterRole] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
 
   // ── Build query params from filter state ─────────────────────────────────
@@ -638,22 +628,24 @@ export default function AdminEmployeesPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Employees</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage staff accounts and their client access
+            Manage team members, roles, and client assignments
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">{employees.length} result{employees.length !== 1 ? "s" : ""}</Badge>
-          <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> Add Employee
-          </Button>
-        </div>
+        <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1.5">
+          <Plus className="w-4 h-4" /> Add Employee
+        </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or email…" className="pl-9" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, email, or position…"
+            className="pl-9"
+          />
         </div>
 
         {/* Department filter */}
@@ -663,7 +655,7 @@ export default function AdminEmployeesPage() {
           className={selectClass}
         >
           <option value="">All Departments</option>
-          {allDepartments.map((d) => (
+          {allDepartments.filter((d) => d.isActive).map((d) => (
             <option key={d._id} value={d._id}>{d.name}</option>
           ))}
         </select>

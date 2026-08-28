@@ -33,7 +33,6 @@ function UserMenu({ name, role }: { name: string; role: string }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const isAdmin = role === 'admin';
   const initials = name.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase()).join('');
 
   return (
@@ -56,20 +55,18 @@ function UserMenu({ name, role }: { name: string; role: string }) {
           {/* User info */}
           <div className="px-3 py-2 border-b border-border mb-1">
             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{isAdmin ? '🛡 Administrator' : '👤 Employee'}</p>
+            <p className="text-xs text-muted-foreground capitalize">{role || 'Employee'}</p>
           </div>
 
-          {/* Admin dashboard link — only for admins */}
-          {isAdmin && (
-            <Link
-              href="/admin/dashboard"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary/70 transition-colors"
-            >
-              <LayoutDashboard className="w-4 h-4 text-primary shrink-0" />
-              Admin Dashboard
-            </Link>
-          )}
+          {/* Dashboard link */}
+          <Link
+            href="/admin/dashboard"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary/70 transition-colors"
+          >
+            <LayoutDashboard className="w-4 h-4 text-primary shrink-0" />
+            Dashboard
+          </Link>
 
           {/* Sign out */}
           <button
@@ -128,7 +125,7 @@ export function Header({ showNav = true }: HeaderProps) {
             // Prevents layout shift while session resolves
             <div className="ml-4 w-24 h-9 rounded-full bg-secondary animate-pulse" />
           ) : session ? (
-            <UserMenu name={session.user?.name ?? session.user?.email ?? 'User'} role={session.user?.role ?? 'user'} />
+            <UserMenu name={session.user?.name ?? session.user?.email ?? 'User'} role={session.user?.role?.name ?? 'user'} />
           ) : (
             <Button asChild size="sm" className="ml-4 shrink-0">
               <Link href="/auth/login">Login</Link>

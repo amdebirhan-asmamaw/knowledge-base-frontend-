@@ -1,12 +1,18 @@
 import type { DefaultSession } from "next-auth";
 
+export interface SessionRole {
+  _id?: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+}
+
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: string;
+      role: SessionRole | null;
       isDepartmentHead: boolean;
-      permissions: string[];
     } & DefaultSession["user"];
     accessToken?: string;
     error?: "RefreshAccessTokenError";
@@ -16,9 +22,8 @@ declare module "next-auth" {
     id: string;
     name?: string | null;
     email?: string | null;
-    role: string;
+    role: SessionRole | null;
     isDepartmentHead: boolean;
-    permissions: string[];
     accessToken: string;
     refreshToken: string;
     accessTokenExpiresAt: number;
@@ -30,9 +35,8 @@ declare module "next-auth/jwt" {
     id: string;
     name: string;
     email: string;
-    role: string;
+    role: SessionRole | null;
     isDepartmentHead: boolean;
-    permissions: string[];
     accessToken: string;
     refreshToken: string;
     accessTokenExpiresAt: number;

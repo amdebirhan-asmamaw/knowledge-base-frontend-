@@ -1,11 +1,17 @@
 import { apiAxios } from "./client";
 
+export interface MyProfileRole {
+  _id?: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+}
+
 export interface MyProfile {
   id: string;
   name: string;
   email: string;
-  role: string;
-  permissions: string[];
+  role: MyProfileRole | null;
   position: string;
   department: { _id: string; name: string } | null;
   assignedClientsCount: number;

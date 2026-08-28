@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  type Department,
-} from "@/lib/api/departments.api";
+import { type Department } from "@/lib/api/departments.api";
 import type { Employee } from "@/lib/api/employees.api";
 import { useDepartmentMutations, useDepartments, useEmployees } from "@/hooks/queries";
 import { Card } from "@/components/ui/card";
@@ -119,7 +117,7 @@ function DepartmentModal({
                 .filter((e) => e.isActive)
                 .map((emp) => (
                   <option key={emp._id} value={emp._id}>
-                    {emp.name} — {emp.position || emp.role}
+                    {emp.name} — {emp.position || emp.role?.name || "User"}
                   </option>
                 ))}
             </select>
@@ -330,7 +328,7 @@ export default function AdminDepartmentsPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search departmentsâ€¦"
+            placeholder="Search departments…"
             className="pl-9"
           />
         </div>

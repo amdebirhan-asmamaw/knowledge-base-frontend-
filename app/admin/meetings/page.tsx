@@ -39,7 +39,7 @@ const VISIBILITY_BADGE: Record<MeetingVisibility, { cls: string; label: string; 
 };
 
 export default function AdminMeetingsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [view, setView] = useState<View>("list");
   const [selected, setSelected] = useState<MeetingMinute | null>(null);
   const [filters, setFilters] = useState<MeetingMinuteFilters>({ page: 1, limit: 15 });

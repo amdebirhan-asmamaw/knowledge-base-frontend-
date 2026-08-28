@@ -20,11 +20,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (status === "authenticated" && session) {
-      if (session.user?.role === "admin") {
-        router.replace("/admin/dashboard");
-      } else {
-        router.replace(from === "/auth/login" ? "/" : from);
-      }
+      router.replace(from === "/auth/login" ? "/admin/dashboard" : from);
     }
   }, [status, session, router, from]);
 

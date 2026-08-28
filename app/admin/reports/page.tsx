@@ -806,7 +806,7 @@ function ReportForm({
 type View = "list" | "detail" | "create" | "edit";
 
 export default function AdminReportsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [view, setView] = useState<View>("list");
   const [selectedReport, setSelectedReport] = useState<TaskReport | null>(null);
   const { createTaskReport, updateTaskReport, deleteTaskReport } =

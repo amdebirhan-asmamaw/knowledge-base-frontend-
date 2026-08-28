@@ -1,5 +1,6 @@
 import type { NextAuthOptions, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
+import type { SessionRole } from "@/types/next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { AxiosError } from "axios";
 import { backendAxios } from "@/lib/api/axios";
@@ -10,9 +11,8 @@ interface BackendLoginResponse {
       id: string;
       name: string;
       email: string;
-      role: string;
+      role: SessionRole | null;
       isDepartmentHead: boolean;
-      permissions: string[];
     };
     tokens: {
       accessToken: string;
@@ -34,9 +34,8 @@ interface BackendRefreshResponse {
 
 interface BackendMeResponse {
   data: {
-    role: string;
+    role: SessionRole | null;
     isDepartmentHead: boolean;
-    permissions: string[];
     name: string;
     email: string;
   };
@@ -106,7 +105,6 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             role: user.role,
             isDepartmentHead: user.isDepartmentHead ?? false,
-            permissions: user.permissions ?? [],
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             accessTokenExpiresAt: resolveExpiresAt(tokens),
@@ -135,7 +133,6 @@ export const authOptions: NextAuthOptions = {
         t.email = user.email ?? "";
         t.role = user.role;
         t.isDepartmentHead = user.isDepartmentHead ?? false;
-        t.permissions = user.permissions ?? [];
         t.accessToken = user.accessToken;
         t.refreshToken = user.refreshToken;
         t.accessTokenExpiresAt = user.accessTokenExpiresAt;
@@ -156,12 +153,11 @@ export const authOptions: NextAuthOptions = {
         t.accessTokenExpiresAt = refreshed.accessTokenExpiresAt;
         t.error = undefined;
 
-        // Sync fresh user data (role, permissions) from DB
+        // Sync fresh user data (role) from DB
         const fresh = await fetchFreshUserData(refreshed.accessToken);
         if (fresh) {
           t.role = fresh.role;
           t.isDepartmentHead = fresh.isDepartmentHead ?? t.isDepartmentHead;
-          t.permissions = fresh.permissions ?? [];
         }
 
         return t;
@@ -178,7 +174,6 @@ export const authOptions: NextAuthOptions = {
         session.user.email = t.email;
         session.user.role = t.role;
         session.user.isDepartmentHead = t.isDepartmentHead ?? false;
-        session.user.permissions = t.permissions ?? [];
       }
       session.accessToken = t.accessToken;
       session.error = t.error;

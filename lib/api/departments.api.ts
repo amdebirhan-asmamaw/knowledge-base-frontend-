@@ -13,7 +13,7 @@ export interface DepartmentMember {
   name: string;
   email: string;
   position: string;
-  role: "user" | "admin";
+  role: { _id: string; name: string; description?: string; permissions?: string[] } | null;
   isActive: boolean;
 }
 

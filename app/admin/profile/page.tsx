@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import {
-  type MyProfile,
-} from "@/lib/api/profile.api";
+import { type MyProfile } from "@/lib/api/profile.api";
 import { useProfile, useProfileMutations } from "@/hooks/queries";
 import { PERMISSION_LABELS } from "@/lib/permissions";
 import { Card } from "@/components/ui/card";
@@ -18,7 +16,6 @@ import {
   Briefcase,
   Building2,
   Shield,
-  ShieldCheck,
   KeyRound,
   Save,
   X,
@@ -484,7 +481,8 @@ function SecuritySection() {
 // ─── Account Overview Section ─────────────────────────────────────────────────
 
 function AccountOverview({ profile }: { profile: MyProfile }) {
-  const permissionEntries = profile.permissions
+  const rolePermissions = profile.role?.permissions ?? [];
+  const permissionEntries = rolePermissions
     .map((p) => {
       const meta = PERMISSION_LABELS[p as keyof typeof PERMISSION_LABELS];
       return meta ? { key: p, ...meta } : null;
@@ -496,6 +494,8 @@ function AccountOverview({ profile }: { profile: MyProfile }) {
     month: "long",
     day: "numeric",
   });
+
+  const roleName = profile.role?.name ?? "User";
 
   return (
     <Card className="overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: "0.2s" }}>
@@ -512,7 +512,7 @@ function AccountOverview({ profile }: { profile: MyProfile }) {
               <Shield className="w-4 h-4 text-teal-600" />
             </div>
             <p className="text-xs text-muted-foreground">Role</p>
-            <p className="text-sm font-semibold text-foreground capitalize">{profile.role}</p>
+            <p className="text-sm font-semibold text-foreground capitalize">{roleName}</p>
           </div>
           <div className="text-center p-3 rounded-xl bg-violet-50/60 border border-violet-100">
             <div className="flex items-center justify-center mb-1.5">
@@ -541,24 +541,14 @@ function AccountOverview({ profile }: { profile: MyProfile }) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Permissions
+              Role Permissions
             </p>
             <span className="text-xs text-muted-foreground">
               {permissionEntries.length} granted
             </span>
           </div>
 
-          {hasPermission("employees:update:all") ? (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-violet-50 border border-violet-200">
-              <ShieldCheck className="w-4 h-4 text-violet-600" />
-              <div>
-                <p className="text-sm font-medium text-violet-800">Super Administrator</p>
-                <p className="text-xs text-violet-600">
-                  You have full access to all system features.
-                </p>
-              </div>
-            </div>
-          ) : permissionEntries.length > 0 ? (
+          {permissionEntries.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {permissionEntries.map((p) => (
                 <Badge
@@ -573,7 +563,7 @@ function AccountOverview({ profile }: { profile: MyProfile }) {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground italic">
-              No specific permissions assigned. Contact an administrator.
+              No permissions assigned to this role. Contact an administrator.
             </p>
           )}
         </div>
@@ -593,8 +583,6 @@ function AccountOverview({ profile }: { profile: MyProfile }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminProfilePage() {
-  const { user } = useAuth();
-
   const {
     profile,
     isLoading,
@@ -629,6 +617,8 @@ export default function AdminProfilePage() {
     );
   }
 
+  const roleName = profile.role?.name ?? "User";
+
   return (
     <div className="space-y-6">
       {/* ── Hero Header ─────────────────────────────────────────────────── */}
@@ -660,20 +650,11 @@ export default function AdminProfilePage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {hasPermission("employees:update:all") && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-violet-50 text-violet-700 border-violet-200 gap-1"
-                    >
-                      <ShieldCheck className="w-3 h-3" />
-                      Super Admin
-                    </Badge>
-                  )}
                   <Badge
                     variant="secondary"
                     className="bg-teal-50 text-teal-700 border-teal-200 capitalize"
                   >
-                    {profile.role}
+                    {roleName}
                   </Badge>
                 </div>
               </div>

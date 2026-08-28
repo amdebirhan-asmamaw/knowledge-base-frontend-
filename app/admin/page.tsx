@@ -49,10 +49,10 @@ function LoginForm() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!isLoading && isAuthenticated && isAdmin) {
+    if (!isLoading && isAuthenticated) {
       router.replace("/admin/dashboard");
     }
-  }, [isLoading, isAuthenticated, isAdmin, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   const onSubmit = async (values: LoginValues) => {
     setServerError(null);

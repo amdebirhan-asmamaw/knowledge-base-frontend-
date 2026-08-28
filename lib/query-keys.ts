@@ -69,4 +69,7 @@ export const queryKeys = {
     detail: (id: string) => ["initiatives", "detail", id] as const,
     evaluationConfig: ["initiatives", "evaluationConfig"] as const,
   },
+  roles: {
+    all: ["roles"] as const,
+  },
 };
