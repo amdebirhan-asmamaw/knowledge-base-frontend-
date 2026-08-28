@@ -881,7 +881,7 @@ export default function AdminReportsPage() {
   };
 
   const canModify = (report: TaskReport) =>
-    user?.id === report.author?._id || user?.isSuperAdmin === true;
+    user?.id === report.author?._id || hasPermission("reports:update:all");
 
   const hasFilters =
     filterPeriod || filterDept || filterStatus || filterVisibility || myReportsOnly || dateFrom || dateTo;

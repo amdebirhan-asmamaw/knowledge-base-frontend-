@@ -7,9 +7,9 @@ import {
 } from "@/lib/api/employees.api";
 import type { Client } from "@/lib/api/clients.api";
 import type { Department } from "@/lib/api/departments.api";
-import { useClients, useEmployees, useEmployeeMutations } from "@/hooks/queries";
+import type { Role } from "@/lib/api/roles.api";
+import { useClients, useEmployees, useEmployeeMutations, useRoles } from "@/hooks/queries";
 import { useDepartments } from "@/hooks/queries";
-import { PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,27 +42,24 @@ function Avatar({ name }: { name: string }) {
 // ─── Create Employee Modal ────────────────────────────────────────────────────
 
 function CreateEmployeeModal({
-  allClients, allDepartments, onClose, onCreate,
+  allClients, allDepartments, allRoles, onClose, onCreate,
 }: {
   allClients: Client[];
   allDepartments: Department[];
+  allRoles: Role[];
   onClose: () => void;
   onCreate: (e: Employee) => void;
 }) {
   const { createEmployee } = useEmployeeMutations();
   const [form, setForm] = useState({
-    name: "", email: "", password: "", department: "", position: "",
+    name: "", email: "", password: "", department: "", position: "", role: "",
   });
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const toggleClient = (id: string) =>
     setSelectedClients((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]);
-
-  const togglePermission = (p: string) =>
-    setSelectedPermissions((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,8 +68,9 @@ function CreateEmployeeModal({
     try {
       onCreate(await createEmployee.mutateAsync({
         ...form,
+        department: form.department || undefined,
+        role: form.role || undefined,
         assignedClients: selectedClients,
-        permissions: selectedPermissions,
       }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create employee");
@@ -111,39 +109,20 @@ function CreateEmployeeModal({
                 ))}
               </select>
             </div>
-            <div>{field("position", "Position", "e.g. Account Manager")}</div>
-          </div>
-
-          {/* Permissions */}
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-2">
-              Permissions ({selectedPermissions.length} granted)
-            </label>
-            <div className="border border-border rounded-lg divide-y divide-border">
-              {Object.entries(PERMISSION_LABELS).map(([perm, meta]) => (
-                <label
-                  key={perm}
-                  className="flex items-center justify-between px-3 py-2.5 hover:bg-secondary/50 cursor-pointer"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{meta.label}</p>
-                    <p className="text-xs text-muted-foreground">{meta.description}</p>
-                  </div>
-                  <div
-                    className={`relative w-9 h-5 rounded-full transition-colors ${
-                      selectedPermissions.includes(perm) ? "bg-violet-600" : "bg-gray-200"
-                    }`}
-                    onClick={() => togglePermission(perm)}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                        selectedPermissions.includes(perm) ? "translate-x-4" : ""
-                      }`}
-                    />
-                  </div>
-                </label>
-              ))}
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Role</label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="">Default (User)</option>
+                {allRoles.map((r) => (
+                  <option key={r._id} value={r._id}>{r.name}</option>
+                ))}
+              </select>
             </div>
+            <div>{field("position", "Position", "e.g. Account Manager")}</div>
           </div>
 
           {/* Assign clients */}
@@ -250,32 +229,26 @@ function AssignClientsModal({
 // ─── Edit Employee Modal ──────────────────────────────────────────────────────
 
 function EditEmployeeModal({
-  employee, allDepartments, onClose, onSaved,
+  employee, allDepartments, allRoles, onClose, onSaved,
 }: {
   employee: Employee;
   allDepartments: Department[];
+  allRoles: Role[];
   onClose: () => void;
   onSaved: (e: Employee) => void;
 }) {
-  const { isSuperAdmin } = useAuth();
-  const { updateEmployee, updatePermissions } = useEmployeeMutations();
+  const { hasPermission } = useAuth();
+  const { updateEmployee, setEmployeeRole } = useEmployeeMutations();
   const [form, setForm] = useState({
     name: employee.name,
     email: employee.email,
     department: employee.department?._id ?? "",
     position: employee.position ?? "",
     isActive: employee.isActive,
+    role: employee.role?._id ?? "",
   });
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
-    employee.permissions ?? [],
-  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const togglePermission = (p: string) =>
-    setSelectedPermissions((prev) =>
-      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
-    );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,9 +265,9 @@ function EditEmployeeModal({
           isActive: form.isActive,
         },
       });
-      // Update permissions if current user is super admin
-      if (isSuperAdmin && !employee.isSuperAdmin) {
-        updated = await updatePermissions.mutateAsync({ id: employee._id, permissions: selectedPermissions });
+      // Update role if current user is super admin
+      if (hasPermission("roles:update") && form.role && form.role !== employee.role?._id) {
+        updated = await setEmployeeRole.mutateAsync({ id: employee._id, role: form.role });
       }
       onSaved(updated);
     } catch (err) {
@@ -374,43 +347,19 @@ function EditEmployeeModal({
             </button>
           </div>
 
-          {/* Permissions panel — only shown to super admins */}
-          {isSuperAdmin && !employee.isSuperAdmin && (
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 bg-secondary/40 border-b border-border">
-                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-                <p className="text-sm font-medium">Permissions</p>
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {selectedPermissions.length}/{PERMISSIONS.length} granted
-                </span>
-              </div>
-              <div className="divide-y divide-border">
-                {PERMISSIONS.map((p) => {
-                  const { label, description } = PERMISSION_LABELS[p];
-                  const enabled = selectedPermissions.includes(p);
-                  return (
-                    <div key={p} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/20">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{label}</p>
-                        <p className="text-xs text-muted-foreground">{description}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => togglePermission(p)}
-                        className={`ml-4 relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-                          enabled ? "bg-violet-600" : "bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                            enabled ? "translate-x-4" : "translate-x-0.5"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+          {/* Role selector — only shown to super admins */}
+          {hasPermission("roles:update") && (
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Role</label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                {allRoles.map((r) => (
+                  <option key={r._id} value={r._id}>{r.name}</option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -500,20 +449,20 @@ function ResetPasswordModal({
 // ─── Employee Table Row ───────────────────────────────────────────────────────
 
 function EmployeeRow({
-  employee, allClients, allDepartments,
+  employee, allClients, allDepartments, allRoles,
   onRefresh,
 }: {
   employee: Employee;
   allClients: Client[];
   allDepartments: Department[];
+  allRoles: Role[];
   onRefresh: () => void;
 }) {
-  const { deactivateEmployee, setEmployeeRole } = useEmployeeMutations();
+  const { deactivateEmployee } = useEmployeeMutations();
   const [showAssign, setShowAssign] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showResetPw, setShowResetPw] = useState(false);
   const [isDeactivating, setIsDeactivating] = useState(false);
-  const [isTogglingRole, setIsTogglingRole] = useState(false);
 
   const handleDeactivate = async () => {
     if (!confirm(`Deactivate ${employee.name}? They will lose access.`)) return;
@@ -522,24 +471,7 @@ function EmployeeRow({
     finally { setIsDeactivating(false); }
   };
 
-  const handleToggleRole = async () => {
-    const newRole = employee.role === "admin" ? "user" : "admin";
-    const label = newRole === "admin" ? "grant admin access" : "revoke admin access";
-    if (!confirm(`This will ${label} for ${employee.name}. Continue?`)) return;
-    setIsTogglingRole(true);
-    try {
-      await setEmployeeRole.mutateAsync({ id: employee._id, role: newRole });
-      onRefresh();
-      if (newRole === "admin") {
-        setTimeout(() => setShowAssign(true), 100);
-      }
-    }
-    catch (err) { alert(err instanceof Error ? err.message : "Failed to update role"); }
-    finally { setIsTogglingRole(false); }
-  };
-
-  const isAdmin = employee.role === "admin";
-  const isProtected = employee.isSuperAdmin === true;
+  const isProtected = employee.role?.name === "admin";
 
   return (
     <>
@@ -585,13 +517,13 @@ function EmployeeRow({
             <span className="inline-flex items-center gap-1 text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2 py-0.5">
               <ShieldCheck className="w-3 h-3" /> Super Admin
             </span>
-          ) : isAdmin ? (
+          ) : employee.role?.name === "admin" || employee.role?.name === "Admin" ? (
             <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
-              <ShieldCheck className="w-3 h-3" /> Admin
+              <ShieldCheck className="w-3 h-3" /> {employee.role?.name || "Admin"}
             </span>
           ) : (
             <span className="text-xs font-medium text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
-              User
+              {employee.role?.name || "User"}
             </span>
           )}
         </td>
@@ -634,19 +566,6 @@ function EmployeeRow({
               >
                 <KeyRound className="w-3 h-3" />
               </Button>
-              <Button
-                variant="outline" size="sm"
-                className={`h-7 text-xs gap-1 ${
-                  isAdmin ? "text-amber-600 border-amber-300 hover:bg-amber-50" : "text-emerald-600 border-emerald-300 hover:bg-emerald-50"
-                }`}
-                onClick={handleToggleRole}
-                disabled={isTogglingRole}
-                title={isAdmin ? "Revoke admin access" : "Grant admin access"}
-              >
-                {isTogglingRole
-                  ? <Loader2 className="w-3 h-3 animate-spin" />
-                  : isAdmin ? <ShieldOff className="w-3 h-3" /> : <ShieldCheck className="w-3 h-3" />}
-              </Button>
               {employee.isActive && (
                 <Button variant="ghost" size="icon-sm" onClick={handleDeactivate} disabled={isDeactivating}
                   className="text-muted-foreground hover:text-red-600 hover:bg-red-50">
@@ -662,6 +581,7 @@ function EmployeeRow({
         <EditEmployeeModal
           employee={employee}
           allDepartments={allDepartments}
+          allRoles={allRoles}
           onClose={() => setShowEdit(false)}
           onSaved={() => { onRefresh(); setShowEdit(false); }}
         />,
@@ -703,12 +623,10 @@ export default function AdminEmployeesPage() {
   if (filterStatus !== "all") empFilters.isActive = filterStatus === "active";
   if (filterRole !== "all") empFilters.role = filterRole;
 
-  // ── Queries ──────────────────────────────────────────────────────────────
   const { employees, isLoading, error, invalidate: invalidateEmployees } = useEmployees(empFilters);
-
   const { clients: allClients } = useClients({ limit: 100 });
-
   const { departments: allDepartments } = useDepartments({ isActive: true });
+  const { roles: allRoles } = useRoles();
   const hasActiveFilters = filterDept !== "" || filterStatus !== "active" || filterRole !== "all";
 
   const selectClass = "h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer";
@@ -764,12 +682,13 @@ export default function AdminEmployeesPage() {
         {/* Role filter */}
         <select
           value={filterRole}
-          onChange={(e) => setFilterRole(e.target.value as "all" | "admin" | "user")}
+          onChange={(e) => setFilterRole(e.target.value)}
           className={selectClass}
         >
           <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="user">User</option>
+          {allRoles.map((r) => (
+            <option key={r._id} value={r._id}>{r.name}</option>
+          ))}
         </select>
 
         {/* Clear filters */}
@@ -822,6 +741,7 @@ export default function AdminEmployeesPage() {
                     employee={emp}
                     allClients={allClients}
                     allDepartments={allDepartments}
+                    allRoles={allRoles}
                     onRefresh={invalidateEmployees}
                   />
                 ))}
@@ -835,6 +755,7 @@ export default function AdminEmployeesPage() {
         <CreateEmployeeModal
           allClients={allClients}
           allDepartments={allDepartments}
+          allRoles={allRoles}
           onClose={() => setShowCreate(false)}
           onCreate={() => {
             invalidateEmployees();

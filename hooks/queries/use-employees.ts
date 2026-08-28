@@ -10,7 +10,6 @@ import {
   resetPassword,
   setEmployeeRole,
   updateEmployee,
-  updatePermissions,
   type Employee,
 } from "@/lib/api/employees.api";
 
@@ -88,17 +87,8 @@ export function useEmployeeMutations() {
   });
 
   const setRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: "user" | "admin" }) =>
+    mutationFn: ({ id, role }: { id: string; role: string }) =>
       setEmployeeRole(id, role),
-    onSuccess: (employee) => {
-      invalidateEmployees();
-      queryClient.invalidateQueries({ queryKey: queryKeys.employees.detail(employee._id) });
-    },
-  });
-
-  const permissions = useMutation({
-    mutationFn: ({ id, permissions }: { id: string; permissions: string[] }) =>
-      updatePermissions(id, permissions),
     onSuccess: (employee) => {
       invalidateEmployees();
       queryClient.invalidateQueries({ queryKey: queryKeys.employees.detail(employee._id) });
@@ -112,6 +102,5 @@ export function useEmployeeMutations() {
     deactivateEmployee: deactivate,
     resetPassword: reset,
     setEmployeeRole: setRole,
-    updatePermissions: permissions,
   };
 }

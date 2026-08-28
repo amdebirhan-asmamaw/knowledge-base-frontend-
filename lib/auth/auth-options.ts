@@ -11,7 +11,6 @@ interface BackendLoginResponse {
       name: string;
       email: string;
       role: string;
-      isSuperAdmin: boolean;
       isDepartmentHead: boolean;
       permissions: string[];
     };
@@ -36,7 +35,6 @@ interface BackendRefreshResponse {
 interface BackendMeResponse {
   data: {
     role: string;
-    isSuperAdmin: boolean;
     isDepartmentHead: boolean;
     permissions: string[];
     name: string;
@@ -107,7 +105,6 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             role: user.role,
-            isSuperAdmin: user.isSuperAdmin,
             isDepartmentHead: user.isDepartmentHead ?? false,
             permissions: user.permissions ?? [],
             accessToken: tokens.accessToken,
@@ -137,7 +134,6 @@ export const authOptions: NextAuthOptions = {
         t.name = user.name ?? "";
         t.email = user.email ?? "";
         t.role = user.role;
-        t.isSuperAdmin = user.isSuperAdmin;
         t.isDepartmentHead = user.isDepartmentHead ?? false;
         t.permissions = user.permissions ?? [];
         t.accessToken = user.accessToken;
@@ -160,11 +156,10 @@ export const authOptions: NextAuthOptions = {
         t.accessTokenExpiresAt = refreshed.accessTokenExpiresAt;
         t.error = undefined;
 
-        // Sync fresh user data (role, permissions, isSuperAdmin) from DB
+        // Sync fresh user data (role, permissions) from DB
         const fresh = await fetchFreshUserData(refreshed.accessToken);
         if (fresh) {
           t.role = fresh.role;
-          t.isSuperAdmin = fresh.isSuperAdmin;
           t.isDepartmentHead = fresh.isDepartmentHead ?? t.isDepartmentHead;
           t.permissions = fresh.permissions ?? [];
         }
@@ -182,7 +177,6 @@ export const authOptions: NextAuthOptions = {
         session.user.name = t.name;
         session.user.email = t.email;
         session.user.role = t.role;
-        session.user.isSuperAdmin = t.isSuperAdmin;
         session.user.isDepartmentHead = t.isDepartmentHead ?? false;
         session.user.permissions = t.permissions ?? [];
       }

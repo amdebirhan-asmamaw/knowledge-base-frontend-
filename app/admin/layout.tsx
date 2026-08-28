@@ -134,6 +134,12 @@ const navGroups: NavGroup[] = [
         permission: "employees:manage",
       },
       {
+        href: "/admin/roles",
+        label: "Roles",
+        icon: ShieldCheck,
+        permission: "employees:manage", // Managed by those who manage employees
+      },
+      {
         href: "/admin/departments",
         label: "Departments",
         icon: Building2,

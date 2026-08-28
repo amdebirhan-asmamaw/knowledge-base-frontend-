@@ -59,7 +59,7 @@ export function DocumentEditor({
 }: DocumentEditorProps) {
   const { categories, createCategory, createSection, createDocument, updateDocument, deleteDocument } =
     useDocumentTree();
-  const { user, isSuperAdmin, hasPermission } = useAuth();
+  const { user, hasPermission } = useAuth();
   const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
@@ -324,16 +324,15 @@ export function DocumentEditor({
     categories.find((c) => c.id === selectedCategory)?.sections ?? [];
 
   // ── Permission gating (mirrors the backend's two-tier rule) ──────────────────
-  const canManageAll = hasPermission("content:manage-all");
-  const isOwner = !!fullDoc?.owner?._id && user?.id === fullDoc.owner._id;
+  const canManageAll = hasPermission("content:update:all");
+  // Document manager = canManageAll, or author/owner.
+  const isOwner = !!fullDoc?.owner?._id && fullDoc.owner._id === user?.id;
   const isContributor =
-    !!user?.id && (fullDoc?.contributors ?? []).some((c) => c._id === user.id);
-  // "Manage" = delete, transfer ownership, change the contributor list. Creating is
-  // always allowed (route-guarded). For an existing doc: super-admins always;
-  // otherwise the owner or a content:manage-all holder. Unowned docs → super-admin only.
+    fullDoc?.contributors?.some((c) => c._id === user?.id) ?? false;
+  // "Manage" = full administrative control (e.g. archiving, deletion, owner change)
   const canManage =
     !documentId ||
-    isSuperAdmin ||
+    hasPermission("content:update:all") ||
     (!!fullDoc?.owner?._id && (isOwner || canManageAll));
   // "Edit content" = title/content edits + restore: managers plus listed contributors.
   const canEditContent = canManage || isContributor;

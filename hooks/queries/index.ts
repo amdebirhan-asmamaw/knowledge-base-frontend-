@@ -5,6 +5,7 @@ export { useFaqs, useFaqMutations } from "./use-faqs";
 export { useReports, useReportMutations } from "./use-reports";
 export { useMeetings, useMeetingMutations } from "./use-meetings";
 export { useSurveys, useSurveyDetail, useSurveyResponses, useSurveySummary, useSurveyMutations } from "./use-surveys";
+export * from "./use-roles";
 export { useProfile, useProfileMutations } from "./use-profile";
 export { useAiChat } from "./use-ai";
 export { usePolicies, usePolicyDetail, usePolicyAcceptances, useComplianceReport, useActivePolicies, usePolicyVersions, usePolicyVersion, usePolicyMutations } from "./use-policies";

@@ -548,7 +548,7 @@ function AccountOverview({ profile }: { profile: MyProfile }) {
             </span>
           </div>
 
-          {profile.isSuperAdmin ? (
+          {hasPermission("employees:update:all") ? (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-violet-50 border border-violet-200">
               <ShieldCheck className="w-4 h-4 text-violet-600" />
               <div>
@@ -660,7 +660,7 @@ export default function AdminProfilePage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {profile.isSuperAdmin && (
+                  {hasPermission("employees:update:all") && (
                     <Badge
                       variant="secondary"
                       className="bg-violet-50 text-violet-700 border-violet-200 gap-1"

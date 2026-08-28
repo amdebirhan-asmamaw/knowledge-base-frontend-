@@ -5,7 +5,6 @@ export interface MyProfile {
   name: string;
   email: string;
   role: string;
-  isSuperAdmin: boolean;
   permissions: string[];
   position: string;
   department: { _id: string; name: string } | null;

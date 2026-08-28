@@ -88,7 +88,7 @@ export default function AdminMeetingsPage() {
         onBack={goList}
         onEdit={() => openEdit(selected)}
         onDelete={() => handleDelete(selected._id)}
-        isOwner={selected.author?._id === user?.id || !!user?.isSuperAdmin}
+        isOwner={selected.author?._id === user?.id || hasPermission("meetings:update:all")}
       />
     );
   }

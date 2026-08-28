@@ -13,9 +13,8 @@ export interface Employee {
   _id: string;
   name: string;
   email: string;
-  role: "user" | "admin";
-  isSuperAdmin: boolean;
-  permissions: string[];
+  role: { _id: string; name: string } | null;
+  permissions?: string[];
   department: { _id: string; name: string } | null;
   position: string;
   isActive: boolean;
@@ -37,7 +36,7 @@ export const createEmployee = (data: {
   department?: string;
   position?: string;
   assignedClients?: string[];
-  permissions?: string[];
+  role?: string;
 }): Promise<Employee> =>
   apiAxios.post("/users", data).then((r) => r.data.data);
 
@@ -56,8 +55,6 @@ export const deactivateEmployee = (id: string): Promise<void> =>
 export const resetPassword = (id: string, newPassword: string): Promise<void> =>
   apiAxios.put(`/users/${id}/reset-password`, { newPassword }).then(() => undefined);
 
-export const setEmployeeRole = (id: string, role: "user" | "admin"): Promise<Employee> =>
+export const setEmployeeRole = (id: string, role: string): Promise<Employee> =>
   apiAxios.put(`/users/${id}/role`, { role }).then((r) => r.data.data);
 
-export const updatePermissions = (id: string, permissions: string[]): Promise<Employee> =>
-  apiAxios.put(`/users/${id}/permissions`, { permissions }).then((r) => r.data.data);

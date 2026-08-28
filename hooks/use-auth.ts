@@ -1,32 +1,34 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import type { Permission } from "@/lib/permissions";
+import { type Permission, type Scope, hasScopePermission as checkScopePermission } from "@/lib/permissions";
 
 export function useAuth() {
   const { data: session, status } = useSession();
   const user = session?.user ?? null;
-  const isSuperAdmin = user?.isSuperAdmin === true;
   const isDepartmentHead = user?.isDepartmentHead === true;
 
-  const hasPermission = (permission: Permission): boolean => {
-    if (isSuperAdmin) return true; // super admins bypass all checks
-    return (user?.permissions ?? []).includes(permission);
+  const hasPermission = (permission: string) => {
+    return user?.permissions?.includes(permission) || false;
+  };
+
+  const hasScopePermission = (domain: string, action: string, scope: Scope = "own") => {
+    return checkScopePermission(user?.permissions, domain, action, scope);
   };
 
   /** Whether the user can access the admin dashboard */
   const canAccessAdmin =
-    user?.role === "admin" || isSuperAdmin || isDepartmentHead;
+    user?.role !== "user" || isDepartmentHead || (user?.permissions?.length ?? 0) > 0;
 
   return {
     user,
     isAuthenticated: status === "authenticated",
     isLoading: status === "loading",
     isAdmin: user?.role === "admin",
-    isSuperAdmin,
     isDepartmentHead,
     canAccessAdmin,
     permissions: user?.permissions ?? [],
     hasPermission,
+    hasScopePermission,
   };
 }
