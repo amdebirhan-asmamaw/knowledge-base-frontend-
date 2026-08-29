@@ -17,8 +17,8 @@ There is no test runner configured.
 
 ## Environment
 
-Copy `.env.local.example` → `.env.local`. Variables:
-
+- `NEXTAUTH_URL` — public URL of the frontend application (e.g. `http://localhost:3000` in dev or production URL).
+- `NEXTAUTH_SECRET` — JWT session secret for NextAuth.js.
 - `NEXT_PUBLIC_API_URL` — backend base URL, no trailing slash. Defaults to `http://localhost:5000/api/v1` (defined in `config/app.config.ts` and reused across all client & server modules).
 - `NEXT_PUBLIC_ADMIN_PASSWORD` — legacy localStorage-only admin gate used by `lib/admin-auth.ts`.
 - `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_TITLE`, `NEXT_PUBLIC_COMPANY_NAME`, etc. — optional branding overrides (see `config/app.config.ts`).

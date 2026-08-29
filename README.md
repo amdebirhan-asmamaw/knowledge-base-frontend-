@@ -155,6 +155,9 @@ pnpm start
 Copy `.env.local.example` to `.env.local` and fill in the values:
 
 ```env
+# Public URL of this app (e.g. http://localhost:3000 in dev or https://yourdomain.com in prod)
+NEXTAUTH_URL=http://localhost:3000
+
 # Backend API base URL
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 
@@ -162,8 +165,6 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 # Generate with: openssl rand -base64 32
 NEXTAUTH_SECRET=replace-me-with-a-long-random-string
 ```
-
-> **Note:** NextAuth automatically detects the deployment URL (on Vercel via `VERCEL_URL` and in development from the request host) so `NEXTAUTH_URL` does not need to be manually defined.
 
 ---
 
