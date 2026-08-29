@@ -220,19 +220,25 @@ import { exportReportToPdf } from "@/lib/export";
 function ReportCard({
   report,
   onClick,
+  onPublish,
+  isPublishing,
+  canModify,
 }: {
   report: TaskReport;
   onClick: () => void;
+  onPublish?: (report: TaskReport) => void;
+  isPublishing?: boolean;
+  canModify?: boolean;
 }) {
   const snippet = report.content.replace(/<[^>]*>/g, "").slice(0, 120);
   return (
     <Card
-      className="p-5 border cursor-pointer hover:shadow-md hover:border-teal-200 transition-all group"
+      className="p-5 border cursor-pointer hover:shadow-md hover:border-emerald-500/30 transition-all group"
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-foreground group-hover:text-teal-700 transition-colors truncate">
+          <h3 className="text-sm font-semibold text-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors truncate">
             {report.title}
           </h3>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -270,14 +276,36 @@ function ReportCard({
             {snippet || "No content"}
           </p>
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {formatDate(report.periodStart)} — {formatDate(report.periodEnd)}
-          </p>
-          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 justify-end">
-            <User className="w-3 h-3" /> {report.author?.name}
-          </p>
+        <div className="text-right shrink-0 flex flex-col items-end justify-between self-stretch">
+          <div>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1 justify-end">
+              <Calendar className="w-3 h-3" />
+              {formatDate(report.periodStart)} — {formatDate(report.periodEnd)}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 justify-end">
+              <User className="w-3 h-3" /> {report.author?.name}
+            </p>
+          </div>
+          {report.status === "draft" && canModify && onPublish && (
+            <div className="mt-2">
+              <Button
+                size="sm"
+                className="h-7 px-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm gap-1 transition-all"
+                disabled={isPublishing}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPublish(report);
+                }}
+              >
+                {isPublishing ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Send className="w-3 h-3" />
+                )}
+                Publish
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -291,12 +319,18 @@ function ReportDetail({
   onBack,
   onEdit,
   onDelete,
+  onPublish,
+  onUnpublish,
+  isPublishing,
   canModify,
 }: {
   report: TaskReport;
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onPublish?: () => void;
+  onUnpublish?: () => void;
+  isPublishing?: boolean;
   canModify: boolean;
 }) {
   return (
@@ -321,7 +355,7 @@ function ReportDetail({
       </div>
 
       <Card className="overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-600" />
+        <div className="h-1 bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400" />
         <div className="p-6 space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -353,7 +387,38 @@ function ReportDetail({
               </div>
             </div>
             {canModify && (
-              <div className="flex gap-1.5 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                {report.status === "draft" && onPublish && (
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm"
+                    disabled={isPublishing}
+                    onClick={onPublish}
+                  >
+                    {isPublishing ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
+                    Publish Report
+                  </Button>
+                )}
+                {report.status === "submitted" && onUnpublish && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    disabled={isPublishing}
+                    onClick={onUnpublish}
+                  >
+                    {isPublishing ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
+                    )}
+                    Revert to Draft
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -953,6 +1018,40 @@ export default function AdminReportsPage() {
   const canModify = (report: TaskReport) =>
     user?.id === report.author?._id || hasPermission("reports:update:all");
 
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  const handlePublish = async (report: TaskReport) => {
+    setPublishingId(report._id);
+    try {
+      const updated = await updateTaskReport.mutateAsync({
+        id: report._id,
+        data: { status: "submitted" },
+      });
+      if (selectedReport?._id === report._id) {
+        setSelectedReport(updated);
+      }
+      invalidateReports();
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const handleUnpublish = async (report: TaskReport) => {
+    setPublishingId(report._id);
+    try {
+      const updated = await updateTaskReport.mutateAsync({
+        id: report._id,
+        data: { status: "draft" },
+      });
+      if (selectedReport?._id === report._id) {
+        setSelectedReport(updated);
+      }
+      invalidateReports();
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
   const hasFilters =
     filterPeriod || filterDept || filterStatus || filterVisibility || myReportsOnly || dateFrom || dateTo;
 
@@ -967,6 +1066,9 @@ export default function AdminReportsPage() {
         }}
         onEdit={() => setView("edit")}
         onDelete={handleDelete}
+        onPublish={() => handlePublish(selectedReport)}
+        onUnpublish={() => handleUnpublish(selectedReport)}
+        isPublishing={publishingId === selectedReport._id}
         canModify={canModify(selectedReport)}
       />
     );
@@ -1297,6 +1399,9 @@ export default function AdminReportsPage() {
               <ReportCard
                 key={r._id}
                 report={r}
+                canModify={canModify(r)}
+                onPublish={handlePublish}
+                isPublishing={publishingId === r._id}
                 onClick={() => {
                   setSelectedReport(r);
                   setView("detail");

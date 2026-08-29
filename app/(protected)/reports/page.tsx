@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageShell";
 import { ReportAttachmentViewer } from "@/components/ReportAttachmentViewer";
+import Link from "next/link";
 import {
   FileText,
   Calendar,
@@ -27,6 +28,7 @@ import {
   Clock,
   Download,
   Paperclip,
+  Plus,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -297,12 +299,19 @@ export default function PublicReportsPage() {
   // ─── List view ────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <PageHeader
-        icon={<FileText className="w-5 h-5" style={{ color: "#2563eb" }} />}
-        title="Reports"
-        subtitle="Published reports from your organization."
-        badge={total > 0 ? <Badge variant="secondary" className="text-xs">{total}</Badge> : undefined}
-      />
+      <div className="flex items-center justify-between gap-4 mb-2 flex-wrap">
+        <PageHeader
+          icon={<FileText className="w-5 h-5 text-emerald-600" />}
+          title="Reports"
+          subtitle="Published reports from your organization."
+          badge={total > 0 ? <Badge variant="secondary" className="text-xs">{total}</Badge> : undefined}
+        />
+        <Link href="/admin/reports">
+          <Button size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs">
+            <Plus className="w-3.5 h-3.5" /> Submit & Manage Reports
+          </Button>
+        </Link>
+      </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
