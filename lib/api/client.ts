@@ -34,8 +34,19 @@ apiAxios.interceptors.request.use(async (config) => {
 
 apiAxios.interceptors.response.use(
   (res) => res,
-  (err) => {
-    const message = err.response?.data?.message ?? err.message ?? "Request failed";
+  async (err) => {
+    const data = err.response?.data;
+    // Blob responses (file streaming) carry the JSON error body as a Blob,
+    // so it has to be read back before the message can be extracted.
+    if (data instanceof Blob && data.type.includes("json")) {
+      try {
+        const parsed = JSON.parse(await data.text());
+        if (parsed?.message) return Promise.reject(new Error(parsed.message));
+      } catch {
+        // fall through to the generic message below
+      }
+    }
+    const message = data?.message ?? err.message ?? "Request failed";
     return Promise.reject(new Error(message));
   }
 );

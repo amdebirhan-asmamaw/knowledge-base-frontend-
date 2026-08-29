@@ -234,6 +234,7 @@ function ReportDetailView({
             <div className="border-t pt-4">
               <ReportAttachmentViewer
                 attachments={report.attachments}
+                reportId={report._id}
                 reportTitle={report.title}
               />
             </div>

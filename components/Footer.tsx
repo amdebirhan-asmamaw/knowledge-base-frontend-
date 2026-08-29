@@ -26,7 +26,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export function Footer() {
   return (
-    <footer className="print:hidden" style={{ background: "#0a0f1e", color: "#94a3b8" }}>
+    <footer className="print:hidden border-t border-emerald-950/40" style={{ background: "#051610", color: "#94a3b8" }}>
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-12 md:grid-cols-[1.5fr_1fr_1fr]">
           {/* Brand */}
@@ -40,22 +40,22 @@ export function Footer() {
 
             <div className="space-y-2 text-xs" style={{ color: "#94a3b8" }}>
               <div className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>{appConfig.company.phone}</span>
               </div>
               <div className="flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                 <span className="leading-snug">{appConfig.company.address}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>{appConfig.company.workingHours}</span>
               </div>
             </div>
 
-            <div className="mt-6 pt-5 border-t" style={{ borderColor: "#1e293b" }}>
-              <p className="text-xs flex items-center gap-2" style={{ color: "#475569" }}>
-                <BookOpen className="w-3.5 h-3.5 shrink-0" style={{ color: "#2563eb" }} />
+            <div className="mt-6 pt-5 border-t" style={{ borderColor: "#133527" }}>
+              <p className="text-xs flex items-center gap-2" style={{ color: "#64748b" }}>
+                <BookOpen className="w-3.5 h-3.5 shrink-0" style={{ color: "#10b981" }} />
                 Keep information accurate and up to date.
               </p>
             </div>
@@ -73,10 +73,10 @@ export function Footer() {
                   <li key={href}>
                     <Link
                       href={href}
-                      className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-white group"
-                      style={{ color: "#64748b" }}
+                      className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-emerald-300 group"
+                      style={{ color: "#94a3b8" }}
                     >
-                      <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-blue-400" style={{ color: "#3b82f6" }} />
+                      <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-emerald-400" style={{ color: "#10b981" }} />
                       {label}
                     </Link>
                   </li>
@@ -97,10 +97,10 @@ export function Footer() {
                   <li key={href}>
                     <Link
                       href={href}
-                      className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-white group"
-                      style={{ color: "#64748b" }}
+                      className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-emerald-300 group"
+                      style={{ color: "#94a3b8" }}
                     >
-                      <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-blue-400" style={{ color: "#3b82f6" }} />
+                      <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-emerald-400" style={{ color: "#10b981" }} />
                       {label}
                     </Link>
                   </li>
@@ -113,12 +113,12 @@ export function Footer() {
         {/* Bottom bar */}
         <div
           className="mt-12 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
-          style={{ borderColor: "#1e293b", color: "#475569" }}
+          style={{ borderColor: "#133527", color: "#64748b" }}
         >
           <span>© {new Date().getFullYear()} {appConfig.company.name}. {appConfig.company.copyrightText}</span>
           <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            All systems operational
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-emerald-400/90 font-medium">All systems operational</span>
           </span>
         </div>
       </div>

@@ -141,7 +141,7 @@ export const appConfig: AppConfig = {
 
   export: {
     brandName: process.env.NEXT_PUBLIC_EXPORT_BRAND || "Ahununu Express",
-    accentColor: process.env.NEXT_PUBLIC_EXPORT_ACCENT || "#2563eb",
+    accentColor: process.env.NEXT_PUBLIC_EXPORT_ACCENT || "#059669",
   },
 
   logo: {

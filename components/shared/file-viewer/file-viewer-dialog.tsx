@@ -34,6 +34,8 @@ export function FileViewerDialog({
   title,
   description,
 }: FileViewerDialogProps) {
+  // `url` is expected to be directly loadable — callers that need auth
+  // (e.g. report attachments) fetch the bytes themselves and pass a blob: URL.
   const fullUrl = resolveFileUrl(url);
   const displayName = fileName || (url ? url.split("/").pop() : "Attached Document");
   const category = getFileCategory(mimeType || fileName || url);
@@ -43,7 +45,9 @@ export function FileViewerDialog({
     const link = document.createElement("a");
     link.href = fullUrl;
     link.download = displayName || "download";
-    link.target = "_blank";
+    // `download` is honoured for same-origin blob: URLs; forcing a new tab
+    // there would navigate away instead of saving the file.
+    if (!fullUrl.startsWith("blob:")) link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -56,7 +60,7 @@ export function FileViewerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[92vh] flex flex-col p-6 gap-4">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[900px] max-h-[92vh] flex flex-col p-6 gap-4">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/60 pb-3 pr-6">
           <div className="space-y-1 overflow-hidden pr-2">
             <div className="flex items-center gap-2">

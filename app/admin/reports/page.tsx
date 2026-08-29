@@ -446,6 +446,7 @@ function ReportDetail({
               <Separator />
               <ReportAttachmentViewer
                 attachments={report.attachments}
+                reportId={report._id}
                 reportTitle={report.title}
               />
             </>

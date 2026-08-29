@@ -34,8 +34,8 @@ export function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-export function getFileIcon(formatOrExt: string) {
-  const ext = formatOrExt.toLowerCase().replace(".", "");
+export function getFileIcon(formatOrExt?: string | null) {
+  const ext = (formatOrExt ?? "").toLowerCase().split(".").pop() ?? "";
   if (["pdf"].includes(ext)) {
     return <FileText className="w-4 h-4 text-red-500" />;
   }
@@ -216,8 +216,8 @@ export function ReportAttachmentUploader({
                       {att.originalFilename}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      Cloudinary · {formatFileSize(att.bytes)} ·{" "}
-                      {att.format.toUpperCase()}
+                      Cloudinary · {formatFileSize(att.bytes)}
+                      {att.format ? ` · ${att.format.toUpperCase()}` : ""}
                     </p>
                   </div>
                 </div>

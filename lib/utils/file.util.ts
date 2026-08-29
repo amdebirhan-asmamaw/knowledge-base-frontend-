@@ -2,7 +2,13 @@ import { API_BASE_URL } from "@/config/app.config";
 
 export function resolveFileUrl(url?: string | null): string {
   if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  // Absolute, object and inline URLs are already resolvable as-is.
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("blob:") ||
+    url.startsWith("data:")
+  ) {
     return url;
   }
   const base = API_BASE_URL.replace(/\/api\/v1\/?$/, "");

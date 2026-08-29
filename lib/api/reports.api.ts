@@ -27,8 +27,10 @@ export interface TaskReportAttachment {
   publicId: string;
   url: string;
   originalFilename: string;
-  format: string;
+  format?: string;
   bytes: number;
+  /** Cloudinary resource type — "raw" for PDFs/Office docs, "image" for images. */
+  resourceType?: "image" | "raw" | "video";
 }
 
 export interface AllowedViewer {
@@ -186,6 +188,32 @@ export const updateTaskReport = (
   return apiAxios
     .put(`/reports/task-reports/${id}`, data)
     .then((r) => r.data.data);
+};
+
+/**
+ * Fetch an attachment through the authenticated API and return an object URL.
+ *
+ * Cloudinary delivery URLs are not usable directly: PDF/raw delivery is
+ * restricted on the account (HTTP 401), and the cross-origin `download`
+ * attribute is ignored by browsers. Streaming through the backend and wrapping
+ * the result in a `blob:` URL makes both previewing and downloading work.
+ *
+ * The caller owns the returned URL and must `URL.revokeObjectURL` it.
+ */
+export const fetchAttachmentObjectUrl = async (
+  reportId: string,
+  attachment: TaskReportAttachment,
+  options?: { download?: boolean },
+): Promise<string> => {
+  const attachmentId = attachment._id || attachment.publicId;
+  const res = await apiAxios.get(
+    `/reports/task-reports/${reportId}/attachments/${encodeURIComponent(attachmentId)}/stream`,
+    {
+      responseType: "blob",
+      params: options?.download ? { download: "true" } : undefined,
+    },
+  );
+  return URL.createObjectURL(res.data as Blob);
 };
 
 export const deleteReportAttachment = (

@@ -5,27 +5,27 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f8f9fa;
-  --foreground: #111827;
+  --background: #f8faf9;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #111827;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #111827;
+  --popover-foreground: #0f172a;
 
-  /* Primary — blue-600 */
-  --primary: #2563eb;
+  /* Primary — Emerald-600 */
+  --primary: #059669;
   --primary-foreground: #ffffff;
 
-  /* Secondary — neutral cool surface */
-  --secondary: #f1f5f9;
-  --secondary-foreground: #1e293b;
+  /* Secondary — neutral emerald-tinted surface */
+  --secondary: #f0fdf4;
+  --secondary-foreground: #064e3b;
 
   /* Muted — subtle surfaces */
   --muted: #e2e8f0;
   --muted-foreground: #64748b;
 
-  /* Accent — blue-800 for text links & highlights */
-  --accent: #1e40af;
+  /* Accent — Emerald-800 for links & highlights */
+  --accent: #065f46;
   --accent-foreground: #ffffff;
 
   --destructive: #dc2626;
@@ -33,61 +33,61 @@
 
   --border: #e2e8f0;
   --input: #ffffff;
-  --ring: #3b82f6;
+  --ring: #10b981;
 
-  --chart-1: #2563eb;
-  --chart-2: #1d4ed8;
-  --chart-3: #1e40af;
-  --chart-4: #1e3a8a;
-  --chart-5: #60a5fa;
+  --chart-1: #059669;
+  --chart-2: #047857;
+  --chart-3: #065f46;
+  --chart-4: #064e3b;
+  --chart-5: #34d399;
 
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
   /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #1e293b;
-  --sidebar-primary: #2563eb;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #059669;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eff6ff;
-  --sidebar-accent-foreground: #1e40af;
+  --sidebar-accent: #ecfdf5;
+  --sidebar-accent-foreground: #065f46;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #3b82f6;
+  --sidebar-ring: #10b981;
 }
 
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #061812;
+  --foreground: #f8faf9;
+  --card: #082119;
+  --card-foreground: #f8faf9;
+  --popover: #082119;
+  --popover-foreground: #f8faf9;
+  --primary: #10b981;
+  --primary-foreground: #061812;
+  --secondary: #0d3126;
+  --secondary-foreground: #ecfdf5;
+  --muted: #133e31;
+  --muted-foreground: #94a3b8;
+  --accent: #34d399;
+  --accent-foreground: #061812;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #133e31;
+  --input: #0d3126;
+  --ring: #10b981;
+  --chart-1: #10b981;
+  --chart-2: #34d399;
+  --chart-3: #059669;
+  --chart-4: #047857;
+  --chart-5: #6ee7b7;
+  --sidebar: #082119;
+  --sidebar-foreground: #f8faf9;
+  --sidebar-primary: #10b981;
+  --sidebar-primary-foreground: #061812;
+  --sidebar-accent: #0d3126;
+  --sidebar-accent-foreground: #ecfdf5;
+  --sidebar-border: #133e31;
+  --sidebar-ring: #10b981;
 }
 
 @theme inline {
@@ -139,6 +139,27 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* ─── Technical Blueprint Grid & Utility Styles ─────────────────────────── */
+
+.bg-tech-grid-dark {
+  background-image: 
+    linear-gradient(to right, rgba(52, 211, 153, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(52, 211, 153, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.bg-tech-grid-light {
+  background-image: 
+    linear-gradient(to right, rgba(16, 185, 129, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-blueprint-pattern {
+  background-image: radial-gradient(rgba(16, 185, 129, 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 /* ─── Skeleton shimmer ─────────────────────────────────────────────────────── */

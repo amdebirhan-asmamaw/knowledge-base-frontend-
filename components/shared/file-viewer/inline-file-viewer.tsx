@@ -35,13 +35,15 @@ export function InlineFileViewer({
   className = "",
   maxHeight = "h-[65vh]",
 }: InlineFileViewerProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [useGoogleDocs, setUseGoogleDocs] = useState(true);
-
   const fullUrl = resolveFileUrl(url);
   const category = getFileCategory(mimeType || fileName || url);
   const displayName = fileName || (url ? url.split("/").pop() : "Document");
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  // Browsers render PDFs natively, so only Office documents — which they
+  // cannot — start in the Google Docs viewer.
+  const [useGoogleDocs, setUseGoogleDocs] = useState(category !== "pdf");
 
   if (!fullUrl) {
     return (
@@ -61,7 +63,7 @@ export function InlineFileViewer({
     const link = document.createElement("a");
     link.href = fullUrl;
     link.download = displayName || "download";
-    link.target = "_blank";
+    if (!fullUrl.startsWith("blob:")) link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
