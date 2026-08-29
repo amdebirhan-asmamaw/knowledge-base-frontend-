@@ -4,7 +4,11 @@ import { apiAxios } from "./client";
 
 export type PeriodType = "daily" | "weekly" | "monthly" | "quarterly";
 export type ReportStatus = "draft" | "submitted";
-export type ReportVisibility = "everyone" | "department_only" | "admins_only" | "private";
+export type ReportVisibility =
+  | "everyone"
+  | "department_only"
+  | "admins_only"
+  | "private";
 
 export interface TaskReportAuthor {
   _id: string;
@@ -19,6 +23,7 @@ export interface TaskReportDepartment {
 }
 
 export interface TaskReportAttachment {
+  _id?: string;
   publicId: string;
   url: string;
   originalFilename: string;
@@ -85,6 +90,8 @@ export interface CreateTaskReportData {
   nextPlan?: string;
   visibility?: ReportVisibility;
   allowedViewers?: string[];
+  files?: File[];
+  deletedAttachmentPublicIds?: string[];
 }
 
 export interface UpdateTaskReportData {
@@ -98,12 +105,46 @@ export interface UpdateTaskReportData {
   nextPlan?: string;
   visibility?: ReportVisibility;
   allowedViewers?: string[];
+  files?: File[];
+  deletedAttachmentPublicIds?: string[];
+}
+
+// Helper to construct FormData for multipart requests
+function buildReportFormData(
+  data: CreateTaskReportData | UpdateTaskReportData,
+): FormData {
+  const fd = new FormData();
+  if (data.title !== undefined) fd.append("title", data.title);
+  if (data.content !== undefined) fd.append("content", data.content);
+  if (data.periodType !== undefined) fd.append("periodType", data.periodType);
+  if (data.periodStart !== undefined) fd.append("periodStart", data.periodStart);
+  if (data.periodEnd !== undefined) fd.append("periodEnd", data.periodEnd);
+  if (data.department !== undefined) fd.append("department", data.department);
+  if (data.status !== undefined) fd.append("status", data.status);
+  if (data.nextPlan !== undefined) fd.append("nextPlan", data.nextPlan);
+  if (data.visibility !== undefined) fd.append("visibility", data.visibility);
+
+  if (data.allowedViewers && data.allowedViewers.length > 0) {
+    data.allowedViewers.forEach((v) => fd.append("allowedViewers", v));
+  }
+
+  if (data.files && data.files.length > 0) {
+    data.files.forEach((file) => fd.append("files", file));
+  }
+
+  if ("deletedAttachmentPublicIds" in data && data.deletedAttachmentPublicIds) {
+    data.deletedAttachmentPublicIds.forEach((id) =>
+      fd.append("deletedAttachmentPublicIds", id),
+    );
+  }
+
+  return fd;
 }
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export const listTaskReports = (
-  filters?: TaskReportFilters
+  filters?: TaskReportFilters,
 ): Promise<TaskReportListResponse> =>
   apiAxios
     .get("/reports/task-reports", { params: filters })
@@ -113,15 +154,47 @@ export const getTaskReport = (id: string): Promise<TaskReport> =>
   apiAxios.get(`/reports/task-reports/${id}`).then((r) => r.data.data);
 
 export const createTaskReport = (
-  data: CreateTaskReportData
-): Promise<TaskReport> =>
-  apiAxios.post("/reports/task-reports", data).then((r) => r.data.data);
+  data: CreateTaskReportData,
+): Promise<TaskReport> => {
+  if (data.files && data.files.length > 0) {
+    const formData = buildReportFormData(data);
+    return apiAxios
+      .post("/reports/task-reports", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data);
+  }
+  return apiAxios.post("/reports/task-reports", data).then((r) => r.data.data);
+};
 
 export const updateTaskReport = (
   id: string,
-  data: UpdateTaskReportData
+  data: UpdateTaskReportData,
+): Promise<TaskReport> => {
+  if (
+    (data.files && data.files.length > 0) ||
+    (data.deletedAttachmentPublicIds &&
+      data.deletedAttachmentPublicIds.length > 0)
+  ) {
+    const formData = buildReportFormData(data);
+    return apiAxios
+      .put(`/reports/task-reports/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data);
+  }
+  return apiAxios
+    .put(`/reports/task-reports/${id}`, data)
+    .then((r) => r.data.data);
+};
+
+export const deleteReportAttachment = (
+  reportId: string,
+  attachmentId: string,
 ): Promise<TaskReport> =>
-  apiAxios.put(`/reports/task-reports/${id}`, data).then((r) => r.data.data);
+  apiAxios
+    .delete(`/reports/task-reports/${reportId}/attachments/${attachmentId}`)
+    .then((r) => r.data.data);
 
 export const deleteTaskReport = (id: string): Promise<void> =>
   apiAxios.delete(`/reports/task-reports/${id}`).then(() => undefined);
@@ -129,7 +202,10 @@ export const deleteTaskReport = (id: string): Promise<void> =>
 // ─── Public (any authenticated user) ─────────────────────────────────────────
 
 export const listPublicTaskReports = (
-  filters?: Pick<TaskReportFilters, "page" | "limit" | "periodType" | "department" | "sortBy" | "sortOrder">
+  filters?: Pick<
+    TaskReportFilters,
+    "page" | "limit" | "periodType" | "department" | "sortBy" | "sortOrder"
+  >,
 ): Promise<TaskReportListResponse> =>
   apiAxios
     .get("/reports/task-reports/public", { params: filters })

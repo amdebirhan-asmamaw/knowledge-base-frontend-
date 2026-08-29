@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageShell";
+import { ReportAttachmentViewer } from "@/components/ReportAttachmentViewer";
 import {
   FileText,
   Calendar,
@@ -25,6 +26,7 @@ import {
   AlertCircle,
   Clock,
   Download,
+  Paperclip,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -89,6 +91,14 @@ function ReportCard({
             >
               {report.periodType}
             </Badge>
+            {report.attachments && report.attachments.length > 0 && (
+              <Badge
+                variant="outline"
+                className="text-[10px] py-0 bg-primary/5 text-primary border-primary/20 flex items-center gap-1"
+              >
+                <Paperclip className="w-2.5 h-2.5" /> {report.attachments.length} {report.attachments.length === 1 ? 'file' : 'files'}
+              </Badge>
+            )}
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Building2 className="w-3 h-3" /> {report.department?.name}
             </span>
@@ -217,6 +227,16 @@ function ReportDetailView({
                 />
               </div>
             </>
+          )}
+
+          {/* Cloudinary Attachments Viewer */}
+          {report.attachments && report.attachments.length > 0 && (
+            <div className="border-t pt-4">
+              <ReportAttachmentViewer
+                attachments={report.attachments}
+                reportTitle={report.title}
+              />
+            </div>
           )}
         </div>
       </Card>

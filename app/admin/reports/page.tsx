@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ReportAttachmentUploader } from "@/components/ReportAttachmentUploader";
+import { ReportAttachmentViewer } from "@/components/ReportAttachmentViewer";
 import {
   BarChart3,
   Plus,
@@ -45,6 +47,7 @@ import {
   Search,
   Eye,
   Users2,
+  Paperclip,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -203,6 +206,11 @@ function getDefaultDates(periodType: PeriodType): {
   return { start: start.toISOString().slice(0, 10), end };
 }
 
+function isContentEmpty(html: string): boolean {
+  if (!html) return true;
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length === 0;
+}
+
 // ─── PDF Export (shared utility) ──────────────────────────────────────────────
 
 import { exportReportToPdf } from "@/lib/export";
@@ -249,6 +257,11 @@ function ReportCard({
                 </Badge>
               );
             })()}
+            {report.attachments && report.attachments.length > 0 && (
+              <Badge variant="outline" className="text-[10px] py-0 bg-primary/5 text-primary border-primary/20 flex items-center gap-1">
+                <Paperclip className="w-2.5 h-2.5" /> {report.attachments.length} {report.attachments.length === 1 ? 'attachment' : 'attachments'}
+              </Badge>
+            )}
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Building2 className="w-3 h-3" /> {report.department?.name}
             </span>
@@ -426,6 +439,17 @@ function ReportDetail({
               </div>
             </>
           )}
+
+          {/* Cloudinary Attachments Viewer */}
+          {report.attachments && report.attachments.length > 0 && (
+            <>
+              <Separator />
+              <ReportAttachmentViewer
+                attachments={report.attachments}
+                reportTitle={report.title}
+              />
+            </>
+          )}
         </div>
       </Card>
     </div>
@@ -473,9 +497,20 @@ function ReportForm({
       };
 
   const [form, setForm] = useState(defaults);
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewerSearch, setViewerSearch] = useState("");
+
+  // Sync default department when departments load asynchronously
+  useEffect(() => {
+    if (!form.department && departments.length > 0) {
+      const match = userDeptId && departments.some((d) => d._id === userDeptId);
+      const targetId = match ? userDeptId! : departments[0]._id;
+      setForm((f) => ({ ...f, department: targetId }));
+    }
+  }, [departments, userDeptId, form.department]);
 
   // Fetch employees for the viewer picker
   const { data: allEmployees = [] } = useQuery<Employee[]>({
@@ -495,11 +530,32 @@ function ReportForm({
   };
 
   const submit = async (status: ReportStatus) => {
-    if (!form.title.trim() || !form.content.trim() || !form.department) return;
-    setIsSaving(true);
     setError(null);
+    if (!form.title.trim()) {
+      setError("Please provide a report title.");
+      return;
+    }
+    if (isContentEmpty(form.content)) {
+      setError("Please write report content.");
+      return;
+    }
+    if (!form.department) {
+      setError("Please select a department for this report.");
+      return;
+    }
+    if (!form.periodStart || !form.periodEnd) {
+      setError("Please provide both period start and end dates.");
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      await onSave({ ...form, status });
+      await onSave({
+        ...form,
+        status,
+        files: stagedFiles,
+        deletedAttachmentPublicIds: deletedAttachmentIds,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save report");
       setIsSaving(false);
@@ -759,6 +815,17 @@ function ReportForm({
             </div>
           )}
 
+          {/* Cloudinary File Uploads */}
+          <div className="pt-2 border-t">
+            <ReportAttachmentUploader
+              existingAttachments={report?.attachments || []}
+              onFilesChange={setStagedFiles}
+              onDeletedAttachmentIdsChange={setDeletedAttachmentIds}
+              maxFiles={5}
+              maxSizeMb={10}
+            />
+          </div>
+
           {error && (
             <div className="flex items-center gap-1.5 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {error}
@@ -768,6 +835,7 @@ function ReportForm({
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1">
             <Button
+              type="button"
               size="sm"
               variant="outline"
               className="gap-1.5"
@@ -782,9 +850,10 @@ function ReportForm({
               Save as Draft
             </Button>
             <Button
+              type="button"
               size="sm"
               className="gap-1.5"
-              disabled={isSaving || !form.title.trim() || !form.content.trim()}
+              disabled={isSaving}
               onClick={() => submit("submitted")}
             >
               {isSaving ? (
@@ -908,6 +977,7 @@ export default function AdminReportsPage() {
       <ReportForm
         report={view === "edit" ? selectedReport : null}
         departments={departments}
+        userDeptId={(user as any)?.departmentId}
         onSave={view === "edit" ? handleUpdate : handleCreate}
         onCancel={() => {
           setView(selectedReport ? "detail" : "list");

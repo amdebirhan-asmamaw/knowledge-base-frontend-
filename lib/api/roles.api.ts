@@ -1,4 +1,4 @@
-import { backendAxios } from "./axios";
+import { apiAxios } from "./client";
 import type { Permission } from "@/lib/permissions";
 
 export interface Role {
@@ -11,30 +11,34 @@ export interface Role {
 }
 
 export const rolesApi = {
-  getAll: async () => {
-    const res = await backendAxios.get<{ data: Role[] }>("/roles");
+  getAll: async (): Promise<Role[]> => {
+    const res = await apiAxios.get<{ data: Role[] }>("/roles");
     return res.data.data;
   },
 
-  getById: async (id: string) => {
-    const res = await backendAxios.get<{ data: Role }>(`/roles/${id}`);
+  getById: async (id: string): Promise<Role> => {
+    const res = await apiAxios.get<{ data: Role }>(`/roles/${id}`);
     return res.data.data;
   },
 
-  create: async (data: { name: string; description?: string; permissions?: Permission[] }) => {
-    const res = await backendAxios.post<{ data: Role }>("/roles", data);
+  create: async (data: {
+    name: string;
+    description?: string;
+    permissions?: Permission[];
+  }): Promise<Role> => {
+    const res = await apiAxios.post<{ data: Role }>("/roles", data);
     return res.data.data;
   },
 
   update: async (
     id: string,
     data: { name?: string; description?: string; permissions?: Permission[] }
-  ) => {
-    const res = await backendAxios.put<{ data: Role }>(`/roles/${id}`, data);
+  ): Promise<Role> => {
+    const res = await apiAxios.put<{ data: Role }>(`/roles/${id}`, data);
     return res.data.data;
   },
 
-  delete: async (id: string) => {
-    await backendAxios.delete(`/roles/${id}`);
+  delete: async (id: string): Promise<void> => {
+    await apiAxios.delete(`/roles/${id}`);
   },
 };
