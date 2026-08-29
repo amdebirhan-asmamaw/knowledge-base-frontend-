@@ -1,4 +1,5 @@
 import axios, { AxiosError, type AxiosInstance } from "axios";
+import { API_BASE_URL } from "@/config/app.config";
 
 export class ApiError extends Error {
   constructor(
@@ -11,11 +12,8 @@ export class ApiError extends Error {
   }
 }
 
-const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
-
 export const backendAxios: AxiosInstance = axios.create({
-  baseURL: BACKEND_BASE_URL,
+  baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
 });
 

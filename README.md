@@ -155,18 +155,15 @@ pnpm start
 Copy `.env.local.example` to `.env.local` and fill in the values:
 
 ```env
-# Backend API base URL — no trailing slash
-BACKEND_API_URL=http://localhost:5000/api/v1
+# Backend API base URL
+NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 
 # NextAuth.js JWT encryption secret
 # Generate with: openssl rand -base64 32
 NEXTAUTH_SECRET=replace-me-with-a-long-random-string
-
-# Public URL of this app (required in production)
-NEXTAUTH_URL=http://localhost:3000
 ```
 
-> **Note:** `BACKEND_API_URL` is a **server-only** variable (no `NEXT_PUBLIC_` prefix). It is never exposed to the browser. All client-side API calls go through the `/api/proxy` route handler which forwards the token automatically.
+> **Note:** NextAuth automatically detects the deployment URL (on Vercel via `VERCEL_URL` and in development from the request host) so `NEXTAUTH_URL` does not need to be manually defined.
 
 ---
 
@@ -344,9 +341,8 @@ pnpm lint       # ESLint
 Set the following in your hosting environment (Vercel, Railway, etc.):
 
 ```
-BACKEND_API_URL=https://api.yourdomain.com/api/v1
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1
 NEXTAUTH_SECRET=<32-byte random string>
-NEXTAUTH_URL=https://yourdomain.com
 ```
 
 ### Vercel

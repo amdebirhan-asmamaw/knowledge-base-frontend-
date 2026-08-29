@@ -1,5 +1,6 @@
 import { apiAxios } from "./client";
 import axios from "axios";
+import { API_BASE_URL } from "@/config/app.config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ export const submitSurveyResponse = (id: string, answers: { fieldId: string; val
 
 // ─── API (External/Public — no auth) ─────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+const API_BASE = API_BASE_URL;
 
 export const getExternalSurvey = (id: string): Promise<Survey> => axios.get(`${API_BASE}/surveys/external/${id}`).then((r) => r.data.data);
 export const submitExternalResponse = (id: string, answers: { fieldId: string; value: unknown }[]): Promise<SurveyResponse> => axios.post(`${API_BASE}/surveys/external/${id}/respond`, { answers }).then((r) => r.data.data);

@@ -38,7 +38,10 @@ try {
   // .env not found — rely on shell env vars
 }
 
-const BASE_URL = process.env.BACKEND_API_URL ?? "http://localhost:5000/api/v1";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.BACKEND_API_URL ||
+  "http://localhost:5000/api/v1";
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL;
 const ADMIN_PASS = process.env.SEED_ADMIN_PASS;
 

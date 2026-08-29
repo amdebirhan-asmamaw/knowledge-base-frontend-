@@ -80,6 +80,7 @@ async function fetchFreshUserData(accessToken: string) {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   pages: { signIn: "/auth/login" },
   providers: [

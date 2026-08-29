@@ -1,7 +1,8 @@
 import { getSession } from "next-auth/react";
 import type { ChatMessage, Source } from "./ai.api";
+import { API_BASE_URL } from "@/config/app.config";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
+const API_BASE = API_BASE_URL;
 
 export type StreamEvent =
   | { type: "sources"; sources: Source[]; meta?: unknown }

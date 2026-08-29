@@ -1,4 +1,10 @@
+/** Single source of truth for the Backend API base URL */
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 export interface AppConfig {
+  /** Backend API Base URL */
+  apiUrl: string;
   /** Main application name (e.g. "Ahununu Express") */
   name: string;
   /** Short brand/acronym (e.g. "Ahununu") */
@@ -65,6 +71,7 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
+  apiUrl: API_BASE_URL,
   name: process.env.NEXT_PUBLIC_APP_NAME || "Ahununu Express",
   shortName: process.env.NEXT_PUBLIC_APP_SHORT_NAME || "Ahununu",
   title:
