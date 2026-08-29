@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AdminAIProvider, useAdminAI } from "@/lib/admin-ai-context";
 import { AdminChatInterface } from "@/components/AdminChatInterface";
 import { PolicyGuard } from "@/components/PolicyGuard";
+import { AppLogo } from "@/components/AppLogo";
 import type { Permission } from "@/lib/permissions";
 
 import {
@@ -218,17 +219,7 @@ function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <FileText className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold text-sm">Blih Brain</span>
-                  <span className="text-xs text-muted-foreground">
-                    Admin Dashboard
-                  </span>
-                </div>
-              </Link>
+              <AppLogo variant="sidebar" href="/admin/dashboard" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

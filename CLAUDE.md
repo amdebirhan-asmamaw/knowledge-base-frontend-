@@ -20,7 +20,14 @@ There is no test runner configured.
 Copy `.env.local.example` → `.env.local`. Variables:
 
 - `NEXT_PUBLIC_API_URL` — backend base URL, no trailing slash. Defaults to `http://localhost:5000/api/v1` (see `lib/api/client.ts`).
-- `NEXT_PUBLIC_ADMIN_PASSWORD` — legacy localStorage-only admin gate used by `lib/admin-auth.ts`. The current `/admin` flow uses JWT (see below); this var is left over from the pre-JWT design.
+- `NEXT_PUBLIC_ADMIN_PASSWORD` — legacy localStorage-only admin gate used by `lib/admin-auth.ts`.
+- `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_TITLE`, `NEXT_PUBLIC_COMPANY_NAME`, etc. — optional branding overrides (see `config/app.config.ts`).
+
+## App Configuration & Branding
+
+Application settings, branding, metadata, navigation, and logos are centrally configured in `config/app.config.ts`.
+- Use `import { appConfig } from "@/config/app.config"` to access application settings.
+- Use `import { AppLogo } from "@/components/AppLogo"` for rendering brand logos (variants: `"header"`, `"sidebar"`, `"footer"`, `"auth"`, `"admin"`, `"icon-only"`, `"text-only"`).
 
 ## Architecture
 

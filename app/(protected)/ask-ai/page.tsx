@@ -1,8 +1,9 @@
 import { ChatInterface } from "@/components/ChatInterface";
+import { appConfig } from "@/config/app.config";
 
 export const metadata = {
-  title: "Ask AI — Blih Brain",
-  description: "AI assistant powered by the Blih Brain knowledge base. Ask anything.",
+  title: appConfig.ai.title,
+  description: appConfig.ai.description,
 };
 
 export default function AskAiPage() {

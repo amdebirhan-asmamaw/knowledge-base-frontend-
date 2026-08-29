@@ -1,8 +1,9 @@
 import { AdminChatInterface } from "@/components/AdminChatInterface";
+import { appConfig } from "@/config/app.config";
 
 export const metadata = {
-  title: "Internal AI Assistant — Admin",
-  description: "Admin-only AI assistant with full access to documents, clients, and knowledge base data.",
+  title: appConfig.ai.adminTitle,
+  description: appConfig.ai.description,
 };
 
 export default function AdminAiPage() {

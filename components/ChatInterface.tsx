@@ -21,6 +21,7 @@ import {
   HelpCircle,
   MessageSquare,
 } from "lucide-react";
+import { appConfig } from "@/config/app.config";
 
 // ─── Markdown-lite renderer ───────────────────────────────────────────────────
 
@@ -422,7 +423,7 @@ export function ChatInterface() {
               value={input}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything about the knowledge base…"
+              placeholder={appConfig.ai.placeholder}
               disabled={isStreaming}
               className="flex-1 bg-transparent text-sm resize-none outline-none text-foreground placeholder:text-muted-foreground/50 disabled:opacity-50 min-h-[28px] max-h-[160px] py-1.5 leading-relaxed"
             />

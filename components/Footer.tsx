@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Brain,
   FileText,
   MessageCircle,
   ShieldCheck,
@@ -8,19 +7,22 @@ import {
   ClipboardList,
   Lightbulb,
   BookOpen,
+  Phone,
+  MapPin,
+  Clock,
 } from "lucide-react";
+import { AppLogo } from "@/components/AppLogo";
+import { appConfig } from "@/config/app.config";
 
-const knowledgeLinks = [
-  { label: "Reports", href: "/reports", icon: BarChart2 },
-  { label: "Minutes", href: "/minutes", icon: ClipboardList },
-  { label: "Surveys", href: "/surveys", icon: FileText },
-  { label: "Initiatives", href: "/initiatives", icon: Lightbulb },
-];
-
-const supportLinks = [
-  { label: "Ask AI", href: "/ask-ai", icon: MessageCircle },
-  { label: "Policies", href: "/policy-acceptance", icon: ShieldCheck },
-];
+const ICON_MAP: Record<string, React.ElementType> = {
+  BarChart2,
+  ClipboardList,
+  FileText,
+  Lightbulb,
+  MessageCircle,
+  ShieldCheck,
+  BookOpen,
+};
 
 export function Footer() {
   return (
@@ -29,20 +31,29 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.5fr_1fr_1fr]">
           {/* Brand */}
           <div>
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-5 group">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors" style={{ background: "#2563eb" }}>
-                <Brain className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-white tracking-tight">
-                Blih Brain
-              </span>
-            </Link>
-            <p className="text-sm leading-6 max-w-xs" style={{ color: "#64748b" }}>
-              A central workspace for policies, reports, meeting records, and
-              operational knowledge across BILIH.
+            <div className="mb-5">
+              <AppLogo variant="footer" />
+            </div>
+            <p className="text-sm leading-6 max-w-xs mb-4" style={{ color: "#64748b" }}>
+              {appConfig.company.footerDescription}
             </p>
 
-            <div className="mt-8 pt-6 border-t" style={{ borderColor: "#1e293b" }}>
+            <div className="space-y-2 text-xs" style={{ color: "#94a3b8" }}>
+              <div className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span>{appConfig.company.phone}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                <span className="leading-snug">{appConfig.company.address}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span>{appConfig.company.workingHours}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-5 border-t" style={{ borderColor: "#1e293b" }}>
               <p className="text-xs flex items-center gap-2" style={{ color: "#475569" }}>
                 <BookOpen className="w-3.5 h-3.5 shrink-0" style={{ color: "#2563eb" }} />
                 Keep information accurate and up to date.
@@ -56,18 +67,21 @@ export function Footer() {
               Knowledge
             </h3>
             <ul className="space-y-3.5">
-              {knowledgeLinks.map(({ label, href, icon: Icon }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-white group"
-                    style={{ color: "#64748b" }}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-blue-400" style={{ color: "#3b82f6" }} />
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              {appConfig.navLinks.footerKnowledge.map(({ label, href, icon }) => {
+                const Icon = ICON_MAP[icon] || FileText;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-white group"
+                      style={{ color: "#64748b" }}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-blue-400" style={{ color: "#3b82f6" }} />
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -77,18 +91,21 @@ export function Footer() {
               Help & Support
             </h3>
             <ul className="space-y-3.5">
-              {supportLinks.map(({ label, href, icon: Icon }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-white group"
-                    style={{ color: "#64748b" }}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-blue-400" style={{ color: "#3b82f6" }} />
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              {appConfig.navLinks.footerSupport.map(({ label, href, icon }) => {
+                const Icon = ICON_MAP[icon] || MessageCircle;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-2.5 text-sm transition-colors hover:text-white group"
+                      style={{ color: "#64748b" }}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-blue-400" style={{ color: "#3b82f6" }} />
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
@@ -98,7 +115,7 @@ export function Footer() {
           className="mt-12 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
           style={{ borderColor: "#1e293b", color: "#475569" }}
         >
-          <span>© {new Date().getFullYear()} BILIH. Internal knowledge base. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} {appConfig.company.name}. {appConfig.company.copyrightText}</span>
           <span className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             All systems operational
@@ -108,3 +125,4 @@ export function Footer() {
     </footer>
   );
 }
+

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, LogOut, LayoutDashboard, FileText, Folder } from 'lucide-react';
+import { AppLogo } from '@/components/AppLogo';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -26,10 +27,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         } fixed lg:relative lg:w-64 h-screen bg-white border-r border-border overflow-y-auto transition-all duration-300 z-30`}
       >
         <div className="p-6">
-          <Link href="/admin/dashboard" className="block mb-8">
-            <h1 className="text-xl font-bold text-foreground">Blih Brain</h1>
-            <p className="text-xs text-muted-foreground">Admin Dashboard</p>
-          </Link>
+          <div className="mb-8">
+            <AppLogo variant="sidebar" href="/admin/dashboard" />
+          </div>
 
           <nav className="space-y-2">
             <NavLink

@@ -2,6 +2,8 @@
 // Generic helpers for exporting content (HTML, PDF via print, plain text, Word-like).
 // All functions are client-only — they rely on `window` / `document`.
 
+import { appConfig } from "@/config/app.config";
+
 /* ── Types ──────────────────────────────────────────────────── */
 
 export interface ExportMetaItem {
@@ -34,9 +36,9 @@ export interface ExportDocumentOptions {
   autoPrint?: boolean;
   /** Document type shown in the brand bar (e.g. "Task Report"). */
   documentType?: string;
-  /** Brand name shown in the header/footer. Defaults to "BLIH". */
+  /** Brand name shown in the header/footer. Defaults to appConfig.export.brandName. */
   brandName?: string;
-  /** Accent color (CSS). Defaults to BLIH teal "#0d9488". */
+  /** Accent color (CSS). Defaults to appConfig.export.accentColor. */
   accentColor?: string;
 }
 
@@ -168,8 +170,8 @@ function buildHtmlDocument(opts: ExportDocumentOptions): string {
       ),
   ].join("\n");
 
-  const brand = opts.brandName || "BLIH";
-  const accent = opts.accentColor || "#0d9488";
+  const brand = opts.brandName || appConfig.export.brandName;
+  const accent = opts.accentColor || appConfig.export.accentColor;
   const footerText = opts.footer || `Generated on ${timestamp} · ${brand}`;
 
   const brandBarHtml = `<div class="brandbar"><span class="dot"></span>${escapeHtml(brand)}${

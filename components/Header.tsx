@@ -4,17 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-import { Brain, LayoutDashboard, LogOut, ChevronDown, User } from 'lucide-react';
+import { LayoutDashboard, LogOut, ChevronDown, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { AppLogo } from '@/components/AppLogo';
+import { appConfig } from '@/config/app.config';
 
-const NAV_LINKS = [
-  { label: 'Home', href: '/' },
-  { label: 'Reports', href: '/reports' },
-  { label: 'Minutes', href: '/minutes' },
-  { label: 'Surveys', href: '/surveys' },
-  { label: 'Initiatives', href: '/initiatives' },
-  { label: 'Ask AI', href: '/ask-ai' },
-];
 
 interface HeaderProps {
   showNav?: boolean;
@@ -91,17 +85,12 @@ export function Header({ showNav = true }: HeaderProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Brain className="h-6 w-6 text-primary" />
-            <span className="text-xl font-semibold text-foreground tracking-tight">
-              Blih Brain
-            </span>
-          </Link>
+          <AppLogo variant="header" />
 
           {/* Nav links */}
           {showNav && (
             <nav className="hidden md:flex items-center gap-1">
-              {NAV_LINKS.map(({ label, href }) => {
+              {appConfig.navLinks.header.map(({ label, href }) => {
                 const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
                 return (
                   <Link

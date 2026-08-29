@@ -18,6 +18,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Lock, Mail, Loader2, AlertCircle } from "lucide-react";
+import { AppLogo } from "@/components/AppLogo";
+import { appConfig } from "@/config/app.config";
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
 
@@ -101,15 +103,7 @@ function LoginForm() {
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/50 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-              <Lock className="w-6 h-6 text-primary-foreground" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Admin Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Blih Brain Knowledge Base Management</p>
-        </div>
+        <AppLogo variant="admin" />
 
         {/* Card */}
         <div className="bg-card rounded-xl shadow-lg border border-border p-8">
@@ -129,7 +123,7 @@ function LoginForm() {
                           {...field}
                           id="email"
                           type="email"
-                          placeholder="admin@blih.com"
+                          placeholder={appConfig.admin.emailPlaceholder}
                           disabled={submitting}
                           autoFocus
                           autoComplete="email"

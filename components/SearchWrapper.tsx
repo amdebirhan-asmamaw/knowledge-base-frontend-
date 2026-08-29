@@ -11,6 +11,7 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
+import { appConfig } from "@/config/app.config";
 
 interface SearchWrapperProps {
   categories: CategoryNode[];
@@ -38,13 +39,10 @@ export function SearchWrapper({
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-5 text-white">
-            Your company&apos;s
-            <span className="block mt-1" style={{ color: "#93c5fd" }}>
-              knowledge hub
-            </span>
+            {appConfig.tagline}
           </h1>
           <p className="text-base sm:text-lg mb-10 max-w-lg mx-auto leading-relaxed" style={{ color: "rgba(191,219,254,0.75)" }}>
-            Policies, reports, meeting records, and operational knowledge — all in one searchable place.
+            {appConfig.heroSubtitle}
           </p>
 
           {/* Search */}
