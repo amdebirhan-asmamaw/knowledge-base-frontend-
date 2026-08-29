@@ -179,7 +179,7 @@ export function SearchWrapper({
         </div>
       </section>
 
-      {/* ─── 02: How It Works & Architecture (Matching Reference Image) ─── */}
+      {/* ─── 02: How It Works & Architecture ───────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-b border-slate-200/80 dark:border-slate-800">
         {/* Section Header */}
         <div className="flex items-center gap-3 mb-4">
@@ -194,10 +194,10 @@ export function SearchWrapper({
           <div className="lg:col-span-6 space-y-6">
             <div>
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-                From empty workspace to audited operations
+                From knowledge indexing to audited compliance
               </h2>
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-4 leading-relaxed">
-                The same unified framework applies whether you manage one city branch or twenty-five regional logistics hubs. Nothing is bolted on later.
+                The unified operational portal for policies, task reports, meeting records, and AI assistance across all Ahununu Express branches.
               </p>
             </div>
 
@@ -205,7 +205,7 @@ export function SearchWrapper({
             <div className="rounded-2xl border border-slate-200/90 dark:border-emerald-900/50 bg-white dark:bg-slate-900 p-6 shadow-xl shadow-slate-950/5 relative overflow-hidden bg-blueprint-pattern">
               <div className="flex items-center justify-between mb-5">
                 <span className="font-mono text-[11px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">
-                  REQUEST LIFECYCLE
+                  REQUEST & ACCESS LIFECYCLE
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-semibold border border-emerald-200/60 dark:border-emerald-800/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -216,12 +216,12 @@ export function SearchWrapper({
               {/* Lifecycle Flow Boxes */}
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 {[
-                  { label: "request", code: "req" },
-                  { label: "tenant resolve", code: "tenant" },
-                  { label: "auth context", code: "auth" },
+                  { label: "user query", code: "req" },
+                  { label: "branch scope", code: "tenant" },
+                  { label: "role access", code: "auth" },
                   { label: "policy check", code: "policy" },
-                  { label: "scoped repository", code: "scope" },
-                  { label: "audit write", code: "audit" },
+                  { label: "scoped documents", code: "scope" },
+                  { label: "audit log", code: "audit" },
                 ].map((step, idx, arr) => (
                   <div key={step.code} className="flex items-center gap-2">
                     <span
@@ -243,7 +243,7 @@ export function SearchWrapper({
 
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  A request that cannot prove its tenant and its permission never reaches the data layer. Every state change lands in the immutable audit log with actor and timestamp.
+                  A request that cannot verify its role permissions and active branch scope never reaches restricted documentation. Every view, policy acknowledgment, and report submission is permanently logged.
                 </p>
               </div>
             </div>
@@ -259,14 +259,14 @@ export function SearchWrapper({
                   STEP 01
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  Instant Discovery
+                  Structured Index
                 </span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
                 Centralize Operational Knowledge
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                Standardize cargo workflows, freight tariff structures, vehicle inspections, and branch directories into clear hierarchical domains.
+                Publish and organize standard operating procedures, transport guidelines, branch directories, and logistics manuals into structured categories and sections.
               </p>
             </div>
 
@@ -278,14 +278,14 @@ export function SearchWrapper({
                   STEP 02
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
-                  Guided Onboarding
+                  Role Governance
                 </span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                Model the Organization
+                Define Roles & Permission Boundaries
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                Import branches, departments, positions, and employees. Roles and permission sets are attached at creation, so nobody starts with more access than their job requires.
+                Configure department and employee access levels. Ensure sensitive executive minutes, compliance policies, and operational reports are only accessible to authorized roles.
               </p>
             </div>
 
@@ -297,14 +297,14 @@ export function SearchWrapper({
                   STEP 03
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/40">
-                  Continuous AI
+                  Continuous AI & Search
                 </span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                Run Daily Operations
+                Access Knowledge & File Reports
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                Attendance and delivery records flow in from devices, policy acknowledgments move through queues, and team members ask AI for instant answers to cargo rules.
+                Team members quickly find operational guidelines using instant search or Ask AI, submit regular task reports, and review recent meeting decisions in real time.
               </p>
             </div>
 
@@ -316,14 +316,14 @@ export function SearchWrapper({
                   STEP 04
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  Retained per Plan
+                  Audit Retained
                 </span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                Prove What Happened
+                Enforce Policy Compliance & Audits
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                Every state change lands in the audit trail with actor, timestamp, and tenant. Reporting and compliance reviews read the record instead of reconstructing it.
+                Track employee policy acknowledgments with digital sign-offs, maintain version histories of all documents, and keep immutable audit logs for enterprise governance.
               </p>
             </div>
           </div>
