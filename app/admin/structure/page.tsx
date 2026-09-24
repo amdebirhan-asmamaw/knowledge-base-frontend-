@@ -55,10 +55,17 @@ export default function StructureManagementPage() {
     deleteSection,
   } = useDocumentTree();
 
-  // ── Permissions ────────────────────────────────────────────────────────────
-  const canCreateStructure = hasPermission("structure:create");
-  const canUpdateStructure = hasPermission("structure:update");
-  const canDeleteStructure = hasPermission("structure:delete");
+  // ── Permissions (Fine-grained) ─────────────────────────────────────────────
+  const canCreateCategory = hasPermission("structure:category:create") || hasPermission("structure:create");
+  const canUpdateCategory = hasPermission("structure:category:update") || hasPermission("structure:update");
+  const canToggleCategoryVisibility = hasPermission("structure:category:toggle-visibility") || canUpdateCategory;
+  const canDeleteCategory = hasPermission("structure:category:delete") || hasPermission("structure:delete");
+
+  const canCreateSection = hasPermission("structure:section:create") || hasPermission("structure:create");
+  const canUpdateSection = hasPermission("structure:section:update") || hasPermission("structure:update");
+  const canToggleSectionVisibility = hasPermission("structure:section:toggle-visibility") || canUpdateSection;
+  const canDeleteSection = hasPermission("structure:section:delete") || hasPermission("structure:delete");
+
   const canCreateContent = hasPermission("content:create");
   const canUpdateContentAll = hasPermission("content:update:all");
 
@@ -395,8 +402,8 @@ export default function StructureManagementPage() {
         )}
       </div>
 
-      {/* ── Add Category (if user has structure:create) ── */}
-      {canCreateStructure && (
+      {/* ── Add Category (if user has structure:category:create) ── */}
+      {canCreateCategory && (
         <Card className="p-4 sm:p-5 border bg-white shadow-xs">
           <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
             <Folder className="w-4 h-4 text-teal-600" />
@@ -534,7 +541,7 @@ export default function StructureManagementPage() {
                   {/* Actions for Category */}
                   <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                     {/* Visibility Switch */}
-                    {canUpdateStructure && (
+                    {canToggleCategoryVisibility && (
                       <div
                         className="flex items-center gap-1 mr-1"
                         title={category.isActive !== false ? "Visible to users — click to hide" : "Hidden from users — click to show"}
@@ -549,7 +556,7 @@ export default function StructureManagementPage() {
                     )}
 
                     {/* Rename */}
-                    {canUpdateStructure && editingCatId !== category.id && (
+                    {canUpdateCategory && editingCatId !== category.id && (
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -562,7 +569,7 @@ export default function StructureManagementPage() {
                     )}
 
                     {/* Delete Category */}
-                    {canDeleteStructure && (
+                    {canDeleteCategory && (
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -669,7 +676,7 @@ export default function StructureManagementPage() {
                             {/* Section Actions */}
                             <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                               {/* Visibility Switch */}
-                              {canUpdateStructure && (
+                              {canToggleSectionVisibility && (
                                 <div
                                   className="flex items-center mr-0.5"
                                   title={section.isActive !== false ? "Visible — click to hide" : "Hidden — click to show"}
@@ -684,7 +691,7 @@ export default function StructureManagementPage() {
                               )}
 
                               {/* Rename Section */}
-                              {canUpdateStructure && editingSecId !== section.id && (
+                              {canUpdateSection && editingSecId !== section.id && (
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
@@ -710,7 +717,7 @@ export default function StructureManagementPage() {
                               )}
 
                               {/* Delete Section */}
-                              {canDeleteStructure && (
+                              {canDeleteSection && (
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
@@ -809,7 +816,7 @@ export default function StructureManagementPage() {
                     })}
 
                     {/* Add Section inline form */}
-                    {canCreateStructure && (
+                    {canCreateSection && (
                       addingSectionToCat === category.id ? (
                         <div className="ml-0 sm:ml-6 flex gap-2 pt-1">
                           <Input
