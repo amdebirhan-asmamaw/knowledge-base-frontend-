@@ -1,4 +1,4 @@
-import type { DocSummary, CategoryNode, SectionNode } from "@/lib/api/documents.api";
+import type { DocSummary, UserRef } from "@/lib/api/documents.api";
 
 export type ActiveSelection =
   | { type: "all" }
@@ -19,4 +19,5 @@ export interface FlatDocument extends DocSummary {
   sectionId: string;
   sectionName: string;
   sectionIsActive?: boolean;
+  contributors?: UserRef[];
 }
