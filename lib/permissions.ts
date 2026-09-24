@@ -36,12 +36,30 @@ export const PERMISSIONS = [
   'content:delete:own',
   'content:delete:dept',
   'content:delete:all',
+  'content:versions:read',
+  'content:versions:restore',
+  'content:manage:ownership',
+  'content:manage:contributors',
+  'content:import:file',
+  'content:export',
 
   // Structure (Categories & Sections)
-  'structure:create',
   'structure:read',
+  'structure:create',
   'structure:update',
   'structure:delete',
+  'structure:category:create',
+  'structure:category:update',
+  'structure:category:toggle-visibility',
+  'structure:category:delete',
+  'structure:section:create',
+  'structure:section:update',
+  'structure:section:toggle-visibility',
+  'structure:section:delete',
+
+  // Uploads
+  'uploads:create',
+  'uploads:delete',
 
   // FAQ
   'faq:create',
@@ -60,12 +78,16 @@ export const PERMISSIONS = [
   'employees:delete:own',
   'employees:delete:dept',
   'employees:delete:all',
+  'employees:password:reset',
+  'employees:clients:assign',
 
   // Departments
   'departments:create',
   'departments:read',
   'departments:update',
   'departments:delete',
+  'departments:members:manage',
+  'departments:status:toggle',
 
   // Reports
   'reports:create',
@@ -111,6 +133,10 @@ export const PERMISSIONS = [
   'policies:read',
   'policies:update',
   'policies:delete',
+  'policies:delete:permanent',
+  'policies:versions:read',
+  'policies:versions:restore',
+  'policies:acceptances:read',
 
   // Initiatives
   'initiatives:create',
@@ -129,6 +155,7 @@ export const PERMISSIONS = [
   'roles:read',
   'roles:update',
   'roles:delete',
+  'roles:assign',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -190,12 +217,30 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   'content:delete:own': { label: 'Delete Own Documents', description: 'Delete documents you created', group: 'Content', tier: 'own' },
   'content:delete:dept': { label: 'Delete Dept Documents', description: 'Delete documents in your department', group: 'Content', tier: 'dept' },
   'content:delete:all': { label: 'Delete All Documents', description: 'Delete any document across the organization', group: 'Content', tier: 'all' },
+  'content:versions:read': { label: 'View Version History', description: 'View version logs and historical snapshots', group: 'Content' },
+  'content:versions:restore': { label: 'Restore Document Versions', description: 'Revert a document to a historical version snapshot', group: 'Content' },
+  'content:manage:ownership': { label: 'Transfer Document Ownership', description: 'Transfer or reassign document owner', group: 'Content' },
+  'content:manage:contributors': { label: 'Manage Document Contributors', description: 'Add or remove collaborators on documents', group: 'Content' },
+  'content:import:file': { label: 'Import Documents', description: 'Upload and parse Word (.docx) or PDF files into rich editor', group: 'Content' },
+  'content:export': { label: 'Export / Print Content', description: 'Copy rich text, print, or export documents', group: 'Content' },
 
   // Structure
-  'structure:create': { label: 'Create Structure', description: 'Create categories & sections', group: 'Structure' },
-  'structure:read': { label: 'View Structure', description: 'View categories & sections', group: 'Structure' },
-  'structure:update': { label: 'Edit Structure', description: 'Edit categories & sections', group: 'Structure' },
-  'structure:delete': { label: 'Delete Structure', description: 'Delete categories & sections', group: 'Structure' },
+  'structure:read': { label: 'View Structure', description: 'View categories & sections hierarchy', group: 'Structure' },
+  'structure:create': { label: 'Create Structure (Legacy)', description: 'Create categories & sections (broad grant)', group: 'Structure' },
+  'structure:update': { label: 'Edit Structure (Legacy)', description: 'Edit categories & sections (broad grant)', group: 'Structure' },
+  'structure:delete': { label: 'Delete Structure (Legacy)', description: 'Delete categories & sections (broad grant)', group: 'Structure' },
+  'structure:category:create': { label: 'Create Categories', description: 'Create top-level structure categories', group: 'Structure' },
+  'structure:category:update': { label: 'Edit Categories', description: 'Edit category names, slugs, and display order', group: 'Structure' },
+  'structure:category:toggle-visibility': { label: 'Toggle Category Visibility', description: 'Activate or deactivate categories', group: 'Structure' },
+  'structure:category:delete': { label: 'Delete Categories', description: 'Delete categories and nested sections', group: 'Structure' },
+  'structure:section:create': { label: 'Create Sections', description: 'Create sections within categories', group: 'Structure' },
+  'structure:section:update': { label: 'Edit Sections', description: 'Edit section names, slugs, and display order', group: 'Structure' },
+  'structure:section:toggle-visibility': { label: 'Toggle Section Visibility', description: 'Activate or deactivate sections', group: 'Structure' },
+  'structure:section:delete': { label: 'Delete Sections', description: 'Delete sections and nested documents', group: 'Structure' },
+
+  // Uploads
+  'uploads:create': { label: 'Upload Files', description: 'Upload files and attachments', group: 'Uploads' },
+  'uploads:delete': { label: 'Delete Uploads', description: 'Delete uploaded files from storage', group: 'Uploads' },
 
   // FAQ
   'faq:create': { label: 'Create FAQs', description: 'Create new FAQ entries', group: 'FAQ' },
@@ -214,12 +259,16 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   'employees:delete:own': { label: 'Deactivate Own Account', description: 'Deactivate own account', group: 'Employees', tier: 'own' },
   'employees:delete:dept': { label: 'Deactivate Dept Employees', description: 'Deactivate accounts in your department', group: 'Employees', tier: 'dept' },
   'employees:delete:all': { label: 'Deactivate All Employees', description: 'Deactivate any employee account', group: 'Employees', tier: 'all' },
+  'employees:password:reset': { label: 'Reset Employee Passwords', description: 'Reset passwords for employee accounts', group: 'Employees' },
+  'employees:clients:assign': { label: 'Assign Clients to Employees', description: 'Assign client accounts to employees', group: 'Employees' },
 
   // Departments
   'departments:create': { label: 'Create Departments', description: 'Create new departments', group: 'Departments' },
   'departments:read': { label: 'View Departments', description: 'View departments', group: 'Departments' },
   'departments:update': { label: 'Edit Departments', description: 'Edit departments', group: 'Departments' },
   'departments:delete': { label: 'Delete Departments', description: 'Delete departments', group: 'Departments' },
+  'departments:members:manage': { label: 'Manage Department Members', description: 'Add, remove, or transfer employees across departments', group: 'Departments' },
+  'departments:status:toggle': { label: 'Toggle Department Status', description: 'Reactivate or toggle department status', group: 'Departments' },
 
   // Reports
   'reports:create': { label: 'Create Reports', description: 'Create new task reports', group: 'Reports' },
@@ -265,6 +314,10 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   'policies:read': { label: 'View Policies', description: 'View employment policies', group: 'Policies' },
   'policies:update': { label: 'Edit Policies', description: 'Edit employment policies', group: 'Policies' },
   'policies:delete': { label: 'Delete Policies', description: 'Delete employment policies', group: 'Policies' },
+  'policies:delete:permanent': { label: 'Purge Policies Permanently', description: 'Hard-delete policies permanently from database', group: 'Policies' },
+  'policies:versions:read': { label: 'View Policy Versions', description: 'View revision history for policies', group: 'Policies' },
+  'policies:versions:restore': { label: 'Restore Policy Versions', description: 'Restore policy to a historical revision', group: 'Policies' },
+  'policies:acceptances:read': { label: 'View Policy Acceptances', description: 'Audit employee acceptances and acknowledgments', group: 'Policies' },
 
   // Initiatives
   'initiatives:create': { label: 'Create Initiatives', description: 'Create employee initiatives', group: 'Initiatives' },
@@ -283,4 +336,5 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   'roles:read': { label: 'View Roles', description: 'View roles', group: 'Roles' },
   'roles:update': { label: 'Edit Roles', description: 'Edit roles and permissions', group: 'Roles' },
   'roles:delete': { label: 'Delete Roles', description: 'Delete roles', group: 'Roles' },
+  'roles:assign': { label: 'Assign Roles', description: 'Assign roles to employee accounts', group: 'Roles' },
 };
