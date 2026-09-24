@@ -34,11 +34,13 @@ import {
   FilePlus,
   Loader2,
   Folder,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import { StructureTreeSidebar } from "./StructureTreeSidebar";
 import { DocumentListView } from "./DocumentListView";
 import { DocumentGridView } from "./DocumentGridView";
-import { DocumentPreviewDrawer } from "./DocumentPreviewDrawer";
+import { DocumentDetailModal } from "./DocumentDetailModal";
 import { MoveDocumentDialog } from "./MoveDocumentDialog";
 import { CategoryModal } from "./CategoryModal";
 import { SectionModal } from "./SectionModal";
@@ -169,22 +171,48 @@ export function KnowledgeBaseExplorer() {
     });
   }, [allFlatDocuments, activeSelection, statusFilter, searchQuery, sortField, sortOrder, user?.id]);
 
-  // ── Context Title ─────────────────────────────────────────────────────────
-  const contextTitle = useMemo(() => {
-    if (activeSelection.type === "all") return "All Documents";
-    if (activeSelection.type === "my_docs") return "My Documents";
-    if (activeSelection.type === "hidden") return "Hidden Items";
+  // ── View Context & Breadcrumb ─────────────────────────────────────────────
+  const viewContext = useMemo(() => {
+    if (activeSelection.type === "all") {
+      return {
+        title: "All Documents",
+        breadcrumb: null,
+      };
+    }
+    if (activeSelection.type === "my_docs") {
+      return {
+        title: "My Documents",
+        breadcrumb: ["Quick Views", "My Documents"],
+      };
+    }
+    if (activeSelection.type === "hidden") {
+      return {
+        title: "Hidden Items",
+        breadcrumb: ["Quick Views", "Hidden Items"],
+      };
+    }
     if (activeSelection.type === "category") {
-      const cat = categories.find((c) => c.id === activeSelection.categoryId);
-      return cat ? cat.name : "Category";
+      const cat = categories.find((c) => String(c.id) === String(activeSelection.categoryId));
+      return {
+        title: cat ? cat.name : "Category",
+        breadcrumb: ["Categories", cat ? cat.name : "Category"],
+      };
     }
     if (activeSelection.type === "section") {
       for (const cat of categories) {
-        const sec = cat.sections.find((s) => s.id === activeSelection.sectionId);
-        if (sec) return `${cat.name} › ${sec.name}`;
+        const sec = cat.sections.find((s) => String(s.id) === String(activeSelection.sectionId));
+        if (sec) {
+          return {
+            title: sec.name,
+            breadcrumb: [cat.name, sec.name],
+          };
+        }
       }
     }
-    return "Knowledge Base";
+    return {
+      title: "Knowledge Base",
+      breadcrumb: null,
+    };
   }, [activeSelection, categories]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -229,7 +257,7 @@ export function KnowledgeBaseExplorer() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 w-full pb-12">
       {/* ── Top Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -340,65 +368,107 @@ export function KnowledgeBaseExplorer() {
 
         {/* Right Main Workspace */}
         <main className="flex-1 w-full bg-white border border-border rounded-xl p-5 shadow-2xs space-y-4">
-          {/* Workspace Title & Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/80">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-foreground">{contextTitle}</h2>
-                <Badge variant="secondary" className="text-xs font-normal">
-                  {displayedDocuments.length} doc{displayedDocuments.length !== 1 ? "s" : ""}
-                </Badge>
+          {/* Workspace Header: Title, Breadcrumb & Count */}
+          <div className="pb-4 border-b border-border/70 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                {viewContext.breadcrumb && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1 font-medium">
+                    <span>{viewContext.breadcrumb[0]}</span>
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/50 shrink-0" />
+                    <span className="text-teal-700 font-semibold">{viewContext.breadcrumb[1]}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">
+                    {viewContext.title}
+                  </h2>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                    {displayedDocuments.length} {displayedDocuments.length === 1 ? "doc" : "docs"}
+                  </span>
+                </div>
               </div>
+
+              {/* Quick create button inside workspace header */}
+              {canCreateContent && (
+                <Button
+                  size="sm"
+                  onClick={handleOpenNewDocument}
+                  className="self-start sm:self-auto gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs h-8 font-medium shadow-2xs"
+                >
+                  <FilePlus className="w-3.5 h-3.5" />
+                  <span>New Document</span>
+                </Button>
+              )}
             </div>
 
-            {/* View Mode & Filter Controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Search */}
-              <div className="relative w-48 sm:w-56">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            {/* Dedicated Search & Filter Toolbar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
+              {/* Search input with Clear button */}
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search in view..."
-                  className="pl-8 h-8 text-xs bg-slate-50 border-border"
+                  className="pl-8 pr-7 h-8 text-xs bg-slate-50 hover:bg-slate-100/70 focus:bg-white border-border/80 rounded-md transition-colors"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors"
+                    title="Clear search"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
 
-              {/* Status Filter */}
-              <Select
-                value={statusFilter}
-                onValueChange={(v) => setStatusFilter(v as "all" | "active" | "hidden")}
-              >
-                <SelectTrigger className="h-8 text-xs w-28">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="hidden">Hidden Only</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Filter & View Mode Controls */}
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) => setStatusFilter(v as "all" | "active" | "hidden")}
+                >
+                  <SelectTrigger className="h-8 text-xs w-28 bg-slate-50 hover:bg-slate-100/70 border-border/80">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-border shadow-lg">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active Only</SelectItem>
+                    <SelectItem value="hidden">Hidden Only</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              {/* List / Grid Toggle */}
-              <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-50">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setViewMode("list")}
-                  className={`h-7 w-7 rounded ${viewMode === "list" ? "bg-white shadow-2xs text-teal-700" : "text-muted-foreground"}`}
-                  title="List View"
-                >
-                  <LayoutList className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setViewMode("grid")}
-                  className={`h-7 w-7 rounded ${viewMode === "grid" ? "bg-white shadow-2xs text-teal-700" : "text-muted-foreground"}`}
-                  title="Grid View"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                </Button>
+                <div className="flex items-center border border-border/80 rounded-md p-0.5 bg-slate-50">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setViewMode("list")}
+                    className={`h-7 w-7 rounded-sm transition-all ${
+                      viewMode === "list"
+                        ? "bg-white shadow-2xs text-teal-700 font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title="List View"
+                  >
+                    <LayoutList className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setViewMode("grid")}
+                    className={`h-7 w-7 rounded-sm transition-all ${
+                      viewMode === "grid"
+                        ? "bg-white shadow-2xs text-teal-700 font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -419,7 +489,16 @@ export function KnowledgeBaseExplorer() {
                   ? `No documents matched "${searchQuery}".`
                   : "No documents in this view. Click below to create your first document."}
               </p>
-              {canCreateContent && (
+              {searchQuery ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchQuery("")}
+                  className="mt-4 text-xs"
+                >
+                  Clear Search Filter
+                </Button>
+              ) : canCreateContent ? (
                 <Button
                   size="sm"
                   onClick={handleOpenNewDocument}
@@ -428,7 +507,7 @@ export function KnowledgeBaseExplorer() {
                   <Plus className="w-3.5 h-3.5" />
                   <span>Create Document</span>
                 </Button>
-              )}
+              ) : null}
             </div>
           ) : viewMode === "list" ? (
             <DocumentListView
@@ -454,8 +533,8 @@ export function KnowledgeBaseExplorer() {
         </main>
       </div>
 
-      {/* ── Slide-Over Document Preview Drawer ── */}
-      <DocumentPreviewDrawer
+      {/* ── Document Detail Centered Modal Dialog ── */}
+      <DocumentDetailModal
         activeDoc={previewDoc}
         onClose={() => setPreviewDoc(null)}
         onOpenEdit={(id) => {

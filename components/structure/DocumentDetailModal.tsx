@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserChip } from "@/components/UserChip";
@@ -20,24 +22,26 @@ import {
   FileText,
   Calendar,
   ArrowRightLeft,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import type { FlatDocument } from "./types";
 
-interface DocumentPreviewDrawerProps {
+interface DocumentDetailModalProps {
   activeDoc: FlatDocument | null;
   onClose: () => void;
   onOpenEdit: (id: string) => void;
   onOpenMove: (doc: FlatDocument) => void;
 }
 
-export function DocumentPreviewDrawer({
+export function DocumentDetailModal({
   activeDoc,
   onClose,
   onOpenEdit,
   onOpenMove,
-}: DocumentPreviewDrawerProps) {
+}: DocumentDetailModalProps) {
   const { hasPermission, hasScopePermission } = useAuth();
   const { data: fullDoc, isLoading } = useDocument(activeDoc?._id);
   const [copied, setCopied] = useState(false);
@@ -68,30 +72,31 @@ export function DocumentPreviewDrawer({
   if (!activeDoc) return null;
 
   return (
-    <Sheet open={!!activeDoc} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0 bg-white">
+    <Dialog open={!!activeDoc} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 bg-white border border-border shadow-2xl overflow-hidden">
         {/* Header Ribbon */}
-        <SheetHeader className="p-6 border-b border-border bg-slate-50/50">
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+        <div className="p-6 border-b border-border bg-slate-50/70">
+          <div className="flex items-center justify-between gap-3 mb-2 pr-8">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200">
                 {activeDoc.categoryName} › {activeDoc.sectionName}
               </span>
               {activeDoc.docId && (
-                <Badge variant="outline" className="font-mono text-[10px] bg-white">
+                <Badge variant="outline" className="font-mono text-[11px] bg-white border-slate-300">
                   {activeDoc.docId}
                 </Badge>
               )}
             </div>
+
             {/* Quick Actions */}
             <div className="flex items-center gap-1.5">
               {canExport && (
-                <Button variant="ghost" size="icon-sm" onClick={handleCopy} title="Copy text">
+                <Button variant="ghost" size="icon-sm" onClick={handleCopy} title="Copy plain text">
                   {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
                 </Button>
               )}
               {canExport && (
-                <Button variant="ghost" size="icon-sm" onClick={handlePrint} title="Print">
+                <Button variant="ghost" size="icon-sm" onClick={handlePrint} title="Print document">
                   <Printer className="w-4 h-4 text-muted-foreground" />
                 </Button>
               )}
@@ -100,7 +105,7 @@ export function DocumentPreviewDrawer({
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => onOpenMove(activeDoc)}
-                  title="Move to another section"
+                  title="Move to another location"
                 >
                   <ArrowRightLeft className="w-4 h-4 text-muted-foreground" />
                 </Button>
@@ -109,7 +114,7 @@ export function DocumentPreviewDrawer({
                 <Button
                   size="sm"
                   onClick={() => onOpenEdit(activeDoc._id)}
-                  className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs h-8 ml-1"
+                  className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs h-8 ml-1 font-medium"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   <span>Edit</span>
@@ -118,9 +123,12 @@ export function DocumentPreviewDrawer({
             </div>
           </div>
 
-          <SheetTitle className="text-xl font-bold text-foreground text-left leading-snug">
+          <DialogTitle className="text-xl font-bold text-foreground text-left leading-snug">
             {activeDoc.title}
-          </SheetTitle>
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Document details and content for {activeDoc.title}
+          </DialogDescription>
 
           {/* Metadata bar */}
           <div className="flex items-center gap-4 pt-3 flex-wrap text-xs text-muted-foreground">
@@ -137,9 +145,9 @@ export function DocumentPreviewDrawer({
               </div>
             )}
           </div>
-        </SheetHeader>
+        </div>
 
-        {/* Content Body */}
+        {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {isLoading ? (
             <div className="space-y-4 py-8">
@@ -170,7 +178,13 @@ export function DocumentPreviewDrawer({
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+
+        <DialogFooter className="p-3 border-t border-border bg-slate-50/50 flex justify-end">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

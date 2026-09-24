@@ -593,8 +593,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-5xl mx-auto w-full">
+        <main className="flex-1 overflow-auto p-4 sm:p-6">
+          <div className="w-full max-w-[1750px] mx-auto">
             {hasAccess ? (
               <PolicyGuard>{children}</PolicyGuard>
             ) : (
