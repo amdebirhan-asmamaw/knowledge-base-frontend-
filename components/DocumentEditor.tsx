@@ -196,9 +196,13 @@ export function DocumentEditor({
       if (documentId) {
         // Only send ownership/contributor fields when allowed to manage them —
         // otherwise the backend would 403 a contributor's content-only edit.
-        const data: Record<string, unknown> = canManage
-          ? { ...base, owner: owner || null, contributors }
-          : { ...base };
+        const data: Record<string, unknown> = { ...base };
+        if (canManageOwnership) {
+          data.owner = owner || null;
+        }
+        if (canManageContributors) {
+          data.contributors = contributors;
+        }
         // Versioning is opt-in: only snapshot when the editor asked to.
         data.createVersion = !!versionOpts?.createVersion;
         if (versionOpts?.createVersion) {
@@ -351,20 +355,34 @@ export function DocumentEditor({
   const currentSections =
     categories.find((c) => c.id === selectedCategory)?.sections ?? [];
 
-  // ── Permission gating (mirrors the backend's two-tier rule) ──────────────────
+  // ── Permission gating (mirrors the backend's fine-grained rules) ─────────────
   const canManageAll = hasPermission("content:update:all");
-  // Document manager = canManageAll, or author/owner.
   const isOwner = !!fullDoc?.owner?._id && fullDoc.owner._id === user?.id;
   const isContributor =
     fullDoc?.contributors?.some((c) => c._id === user?.id) ?? false;
-  // "Manage" = full administrative control (e.g. archiving, deletion, owner change)
   const canManage =
     !documentId ||
     hasPermission("content:update:all") ||
     (isOwner && hasScopePermission("content", "update", "own"));
-  // "Edit content" = title/content edits + restore: managers plus listed contributors.
   const canEditContent = canManage || isContributor;
   const canCreate = !documentId ? hasPermission("content:create") : canEditContent;
+  const canDeleteContent =
+    hasPermission("content:delete:all") ||
+    (isOwner && hasScopePermission("content", "delete", "own"));
+
+  const canManageOwnership =
+    hasPermission("content:manage:ownership") ||
+    (!documentId ? hasPermission("content:create") : (canManage && canManageAll));
+
+  const canManageContributors =
+    hasPermission("content:manage:contributors") ||
+    (!documentId ? hasPermission("content:create") : canManage);
+
+  const canCreateCategory = hasPermission("structure:category:create");
+  const canCreateSection = hasPermission("structure:section:create");
+  const canImportFile = hasPermission("content:import:file");
+  const canViewVersions = hasPermission("content:versions:read");
+  const canRestoreVersions = hasPermission("content:versions:restore");
 
   // Resolve a user's name/email from the loaded users list, falling back to the
   // populated owner/contributor refs (covers inactive users not in the dropdown).
@@ -447,10 +465,12 @@ export function DocumentEditor({
           {documentId && (
             <TabsList className="mb-4">
               <TabsTrigger value="editor">Editor</TabsTrigger>
-              <TabsTrigger value="history" className="gap-1.5">
-                <History className="w-3.5 h-3.5" />
-                Version history
-              </TabsTrigger>
+              {canViewVersions && (
+                <TabsTrigger value="history" className="gap-1.5">
+                  <History className="w-3.5 h-3.5" />
+                  Version history
+                </TabsTrigger>
+              )}
             </TabsList>
           )}
           <TabsContent value="editor" className="space-y-6">
@@ -521,15 +541,17 @@ export function DocumentEditor({
                         {cat.name}
                       </SelectItem>
                     ))}
-                    <SelectItem
-                      value={ADD_NEW_CATEGORY}
-                      className="text-primary font-medium border-t border-border mt-1 pt-1"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <Plus className="w-3.5 h-3.5" />
-                        Add new category
-                      </span>
-                    </SelectItem>
+                    {canCreateCategory && (
+                      <SelectItem
+                        value={ADD_NEW_CATEGORY}
+                        className="text-primary font-medium border-t border-border mt-1 pt-1"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Plus className="w-3.5 h-3.5" />
+                          Add new category
+                        </span>
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {errors.category && (
@@ -556,15 +578,17 @@ export function DocumentEditor({
                         {sec.name}
                       </SelectItem>
                     ))}
-                    <SelectItem
-                      value={ADD_NEW_SECTION}
-                      className="text-primary font-medium border-t border-border mt-1 pt-1"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <Plus className="w-3.5 h-3.5" />
-                        Add new section
-                      </span>
-                    </SelectItem>
+                    {canCreateSection && (
+                      <SelectItem
+                        value={ADD_NEW_SECTION}
+                        className="text-primary font-medium border-t border-border mt-1 pt-1"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Plus className="w-3.5 h-3.5" />
+                          Add new section
+                        </span>
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {errors.section && (
@@ -580,7 +604,7 @@ export function DocumentEditor({
                 <Select
                   value={owner || NO_OWNER}
                   onValueChange={(v) => setOwner(v === NO_OWNER ? "" : v)}
-                  disabled={!canManage}
+                  disabled={!canManageOwnership}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Unassigned" />
@@ -630,7 +654,7 @@ export function DocumentEditor({
             {/* Contributors */}
             <div className="mt-4">
               <label className="block text-sm font-medium mb-1.5">Contributors</label>
-              {canManage && (
+              {canManageContributors && (
                 <Select value="" onValueChange={addContributor}>
                   <SelectTrigger className="md:max-w-md">
                     <SelectValue placeholder="Add a contributor…" />
@@ -660,7 +684,7 @@ export function DocumentEditor({
                       >
                         <UserChip compact user={u} />
                         <span className="text-xs text-foreground">{u?.name ?? "Unknown user"}</span>
-                        {canManage && (
+                        {canManageContributors && (
                           <button
                             type="button"
                             onClick={() => removeContributor(id)}
@@ -687,10 +711,12 @@ export function DocumentEditor({
               <h2 className="text-base font-semibold text-foreground">
                 Content
               </h2>
-              <FileImportButton
-                onImport={handleImport}
-                hasContent={contentHtml.trim().length > 0}
-              />
+              {canImportFile && (
+                <FileImportButton
+                  onImport={handleImport}
+                  hasContent={contentHtml.trim().length > 0}
+                />
+              )}
             </div>
             <RichTextEditor
               value={contentHtml}
@@ -719,7 +745,7 @@ export function DocumentEditor({
               <Save className="w-4 h-4" />
               {isSaving ? "Saving…" : "Save Document"}
             </Button>
-            {documentId && canManage && (
+            {documentId && canDeleteContent && (
               <Button
                 onClick={() => setShowDeleteDialog(true)}
                 variant="destructive"
@@ -734,9 +760,13 @@ export function DocumentEditor({
             </Button>
           </div>
           </TabsContent>
-          {documentId && (
+          {documentId && canViewVersions && (
             <TabsContent value="history">
-              <VersionHistory documentId={documentId} canRestore={canEditContent} onRestored={loadDoc} />
+              <VersionHistory
+                documentId={documentId}
+                canRestore={canEditContent && canRestoreVersions}
+                onRestored={loadDoc}
+              />
             </TabsContent>
           )}
         </Tabs>

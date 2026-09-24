@@ -59,7 +59,7 @@ export function DocumentView({ documentId, onClose }: DocumentViewProps) {
     router.push(`/admin/structure/${documentId}/edit`);
   };
 
-  // Determine permissions
+  // Determine permissions (fine-grained)
   const canManageAll = hasPermission("content:update:all");
   const isOwner = !!doc?.owner?._id && doc.owner._id === user?.id;
   const isContributor = doc?.contributors?.some((c) => c._id === user?.id) ?? false;
@@ -67,6 +67,9 @@ export function DocumentView({ documentId, onClose }: DocumentViewProps) {
     canManageAll ||
     isContributor ||
     (isOwner && hasScopePermission("content", "update", "own"));
+  const canViewVersions = hasPermission("content:versions:read");
+  const canRestoreVersions = hasPermission("content:versions:restore");
+  const canExport = hasPermission("content:export") || hasScopePermission("content", "read", "own");
 
   // Copy plain text content
   const handleCopyContent = () => {
@@ -136,49 +139,55 @@ export function DocumentView({ documentId, onClose }: DocumentViewProps) {
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Version history trigger */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowHistory(true)}
-            className="gap-1.5 text-xs"
-            title="View revision history"
-          >
-            <History className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Versions</span>
-          </Button>
+          {canViewVersions && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHistory(true)}
+              className="gap-1.5 text-xs"
+              title="View revision history"
+            >
+              <History className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Versions</span>
+            </Button>
+          )}
 
           {/* Copy content */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyContent}
-            className="gap-1.5 text-xs"
-            title="Copy plain text"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-green-600" />
-                <span className="text-green-600">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>Copy</span>
-              </>
-            )}
-          </Button>
+          {canExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyContent}
+              className="gap-1.5 text-xs"
+              title="Copy plain text"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-green-600" />
+                  <span className="text-green-600">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Copy</span>
+                </>
+              )}
+            </Button>
+          )}
 
           {/* Print */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="gap-1.5 text-xs"
-            title="Print document"
-          >
-            <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="hidden sm:inline">Print</span>
-          </Button>
+          {canExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="gap-1.5 text-xs"
+              title="Print document"
+            >
+              <Printer className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="hidden sm:inline">Print</span>
+            </Button>
+          )}
 
           {/* Edit Document CTA (if permitted) */}
           {canEditContent ? (
@@ -308,7 +317,7 @@ export function DocumentView({ documentId, onClose }: DocumentViewProps) {
           <div className="py-2">
             <VersionHistory
               documentId={documentId}
-              canRestore={canEditContent}
+              canRestore={canEditContent && canRestoreVersions}
               onRestored={() => {
                 setShowHistory(false);
                 router.refresh();
