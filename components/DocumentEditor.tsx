@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { useDocument, useDocumentTree } from "@/hooks/use-document-tree";
 import { useAuth } from "@/hooks/use-auth";
 import { useEmployees } from "@/hooks/queries";
@@ -10,6 +12,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type { FullDocument } from "@/lib/api/documents.api";
 import type { Employee } from "@/lib/api/employees.api";
 import { RichTextEditor } from "./RichTextEditor";
+import { DocumentView } from "./DocumentView";
 import { UserChip } from "@/components/UserChip";
 import { VersionHistory } from "@/components/VersionHistory";
 import { Card } from "@/components/ui/card";
@@ -30,9 +33,19 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { ChevronLeft, Save, Trash2, Loader2, Plus, History, Lock, X } from "lucide-react";
+import { ChevronLeft, Save, Trash2, Loader2, Plus, History, Lock, X, Eye, AlertCircle } from "lucide-react";
 import { FileImportButton } from "./FileImportButton";
 
 // Sentinel value used for the "Unassigned" owner option in the radix Select
@@ -57,9 +70,10 @@ export function DocumentEditor({
   defaultSectionId,
   onClose,
 }: DocumentEditorProps) {
+  const router = useRouter();
   const { categories, createCategory, createSection, createDocument, updateDocument, deleteDocument } =
     useDocumentTree();
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, hasScopePermission } = useAuth();
   const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
@@ -79,6 +93,8 @@ export function DocumentEditor({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ── Save / version prompt state (existing docs only) ────────────────────────
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -100,7 +116,7 @@ export function DocumentEditor({
   const [createError, setCreateError] = useState<string | null>(null);
 
   // ── Fetch document detail via React Query ──────────────────────────────────
-  const { data: fetchedDoc, isLoading: isLoadingDoc } = useDocument(documentId);
+  const { data: fetchedDoc, isLoading: isLoadingDoc, error: docError } = useDocument(documentId);
 
   // Sync fetched document into local form state
   useEffect(() => {
@@ -109,12 +125,14 @@ export function DocumentEditor({
     setTitle(fetchedDoc.title);
     setDocId(fetchedDoc.docId ?? "");
     setSelectedCategory(
-      typeof fetchedDoc.categoryId === "object"
+      fetchedDoc.categoryId && typeof fetchedDoc.categoryId === "object"
         ? fetchedDoc.categoryId._id
-        : fetchedDoc.categoryId,
+        : (fetchedDoc.categoryId as unknown as string) ?? "",
     );
     setSelectedSection(
-      typeof fetchedDoc.sectionId === "object" ? fetchedDoc.sectionId._id : fetchedDoc.sectionId,
+      fetchedDoc.sectionId && typeof fetchedDoc.sectionId === "object"
+        ? fetchedDoc.sectionId._id
+        : (fetchedDoc.sectionId as unknown as string) ?? "",
     );
     setOwner(fetchedDoc.owner?._id ?? "");
     setContributors((fetchedDoc.contributors ?? []).map((c) => c._id));
@@ -188,13 +206,17 @@ export function DocumentEditor({
           data.changeNote = versionOpts.changeNote || undefined;
         }
         await updateDocument(documentId, data);
+        toast.success("Document updated successfully");
       } else {
         await createDocument({ ...base, owner: owner || undefined, contributors });
+        toast.success("Document created successfully");
       }
       setShowSaveDialog(false);
       onClose();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setSaveError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -219,14 +241,20 @@ export function DocumentEditor({
     doSave({ createVersion, versionLabel: versionLabel.trim(), changeNote: versionNote.trim() });
   };
 
-  const handleDelete = async () => {
-    if (!documentId || !confirm("Delete this document? This cannot be undone."))
-      return;
+  const confirmDelete = async () => {
+    if (!documentId) return;
+    setIsDeleting(true);
     try {
       await deleteDocument(documentId);
+      toast.success("Document deleted");
+      setShowDeleteDialog(false);
       onClose();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Delete failed");
+      const msg = err instanceof Error ? err.message : "Delete failed";
+      setSaveError(msg);
+      toast.error(msg);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -333,9 +361,10 @@ export function DocumentEditor({
   const canManage =
     !documentId ||
     hasPermission("content:update:all") ||
-    (!!fullDoc?.owner?._id && (isOwner || canManageAll));
+    (isOwner && hasScopePermission("content", "update", "own"));
   // "Edit content" = title/content edits + restore: managers plus listed contributors.
   const canEditContent = canManage || isContributor;
+  const canCreate = !documentId ? hasPermission("content:create") : canEditContent;
 
   // Resolve a user's name/email from the loaded users list, falling back to the
   // populated owner/contributor refs (covers inactive users not in the dropdown).
@@ -354,19 +383,57 @@ export function DocumentEditor({
   const removeContributor = (id: string) =>
     setContributors(contributors.filter((c) => c !== id));
 
+  // If document failed to load or does not exist
+  if (documentId && docError) {
+    return (
+      <Card className="p-8 text-center max-w-xl mx-auto my-12 border-dashed">
+        <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+        <h2 className="text-lg font-semibold text-foreground">Document Not Found</h2>
+        <p className="text-sm text-muted-foreground mt-1 mb-6">
+          {docError instanceof Error ? docError.message : "The requested document could not be loaded or access is restricted."}
+        </p>
+        <Button onClick={onClose} variant="outline" className="gap-2">
+          <ChevronLeft className="w-4 h-4" />
+          Back to Structure
+        </Button>
+      </Card>
+    );
+  }
+
+  // If user only has view access (not edit access), gracefully show DocumentView!
+  if (documentId && fetchedDoc && !canEditContent) {
+    return <DocumentView documentId={documentId} onClose={onClose} />;
+  }
+
   return (
     <div>
       {/* Header */}
-      <div className="mb-6 flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={onClose} className="gap-2">
-          <ChevronLeft className="w-4 h-4" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">
-          {documentId ? "Edit Document" : "New Document"}
-        </h1>
-        {isLoadingDoc && (
-          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-1" />
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={onClose} className="gap-2 text-muted-foreground hover:text-foreground">
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            {documentId ? "Edit Document" : "New Document"}
+          </h1>
+          {isLoadingDoc && (
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-1" />
+          )}
+        </div>
+
+        {documentId && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/admin/structure/${documentId}`)}
+              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>View Mode</span>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -615,7 +682,7 @@ export function DocumentEditor({
           </Card>
 
           {/* Editor card */}
-          <Card className={`p-4 2xl:p-6 ${!canEditContent ? "pointer-events-none opacity-60" : ""}`}>
+          <Card className="p-4 2xl:p-6 border bg-white shadow-xs">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-base font-semibold text-foreground">
                 Content
@@ -631,6 +698,7 @@ export function DocumentEditor({
               onChangeJson={setContentJson}
               placeholder="Write your document content here..."
               externalContentVersion={contentVersion}
+              editable={canEditContent}
             />
           </Card>
 
@@ -643,13 +711,17 @@ export function DocumentEditor({
 
           {/* Actions */}
           <div className="flex gap-3 flex-wrap">
-            <Button onClick={handleSaveClick} disabled={isSaving || !canEditContent} className="gap-2">
+            <Button
+              onClick={handleSaveClick}
+              disabled={isSaving || !canEditContent || (!documentId && !canCreate)}
+              className="gap-2 bg-teal-600 hover:bg-teal-700 text-white shadow-xs"
+            >
               <Save className="w-4 h-4" />
               {isSaving ? "Saving…" : "Save Document"}
             </Button>
             {documentId && canManage && (
               <Button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteDialog(true)}
                 variant="destructive"
                 className="gap-2"
               >
@@ -867,6 +939,39 @@ export function DocumentEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete document?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete &ldquo;{title}&rdquo; and all of its version history.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                  Deleting…
+                </>
+              ) : (
+                "Delete Document"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

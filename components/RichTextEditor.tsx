@@ -116,6 +116,8 @@ interface RichTextEditorProps {
   error?: string;
   /** Bump this to imperatively replace editor content with the current `value` */
   externalContentVersion?: number;
+  /** Whether the editor is interactive. If false, toolbars are hidden and content is read-only. Defaults to true. */
+  editable?: boolean;
 }
 
 export function RichTextEditor({
@@ -125,20 +127,22 @@ export function RichTextEditor({
   placeholder = "Write your content here...",
   error,
   externalContentVersion,
+  editable = true,
 }: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false, // prevents SSR/hydration mismatch in Next.js
+    editable,
     extensions: [
       StarterKit.configure({
         heading: false, // disable block headings — using inline marks instead
         link: {
-          // configure the built-in StarterKit link instead of adding a duplicate
-          openOnClick: false,
+          // configure the built-in StarterKit link: open links on click when read-only
+          openOnClick: !editable,
           autolink: true,
         },
       }),
       TextSize,
-      Table.configure({ resizable: true }),
+      Table.configure({ resizable: editable }),
       TableRow,
       TableCell,
       TableHeader,
@@ -151,6 +155,13 @@ export function RichTextEditor({
       onChangeJson?.(editor.getJSON());
     },
   });
+
+  // Sync editable property if changed dynamically
+  useEffect(() => {
+    if (editor && editable !== undefined) {
+      editor.setEditable(editable);
+    }
+  }, [editor, editable]);
 
   // When externalContentVersion bumps, force-set the editor content
   // (e.g. after a file import)
@@ -347,8 +358,9 @@ export function RichTextEditor({
         }
       `}</style>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 bg-secondary/60 px-2.5 py-2 border-b border-border">
+      {/* Toolbar - rendered only in edit mode */}
+      {editable && (
+        <div className="flex flex-wrap items-center gap-0.5 bg-secondary/60 px-2.5 py-2 border-b border-border">
         {/* Inline size marks — apply only to selected text */}
         <Btn
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -658,6 +670,7 @@ export function RichTextEditor({
           </>
         )}
       </div>
+      )}
 
       {/* Editor */}
       <div className="overflow-y-auto max-h-[70vh]">

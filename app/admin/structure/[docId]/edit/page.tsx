@@ -15,7 +15,7 @@ export default function AdminStructureEditPage({
   return (
     <DocumentEditor
       documentId={docId}
-      onClose={() => router.push("/admin/structure")}
+      onClose={() => router.push(`/admin/structure/${docId}`)}
     />
   );
 }
