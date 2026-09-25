@@ -17,6 +17,7 @@ import {
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
+import { toast } from "sonner";
 
 function PolicyContentContainer({
   html,
@@ -75,13 +76,16 @@ function PolicyAcceptanceContent() {
     });
   }, []);
 
-  const handleAccept = async (id: string) => {
+  const handleAccept = async (id: string, title?: string) => {
     setAcceptingId(id);
     try {
       await acceptPolicy.mutateAsync(id);
+      toast.success(`You have successfully acknowledged "${title || "Policy"}"`);
       await refetch();
-    } catch {
-      // error handled by mutation
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to record acceptance"
+      );
     } finally {
       setAcceptingId(null);
     }
@@ -276,7 +280,7 @@ function PolicyAcceptanceContent() {
                         <Button
                           size="sm"
                           disabled={!canAccept || acceptingId === policy._id}
-                          onClick={() => handleAccept(policy._id)}
+                          onClick={() => handleAccept(policy._id, policy.title)}
                           className="gap-2 h-9 px-5 font-semibold shrink-0 shadow-sm bg-primary text-primary-foreground"
                         >
                           {acceptingId === policy._id ? (

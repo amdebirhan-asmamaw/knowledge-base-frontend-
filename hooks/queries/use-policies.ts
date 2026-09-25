@@ -3,10 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import {
-  listPolicies, getPolicy, createPolicy, updatePolicy, deletePolicy,
+  listPolicies, getPolicy, createPolicy, updatePolicy, deletePolicy, hardDeletePolicy, restorePolicy,
   getPolicyAcceptances, getComplianceReport, listActivePolicies, acceptPolicy,
   getPolicyVersions, getPolicyVersion, restorePolicyVersion,
   type PolicyFilters,
+  type AcceptancesFilter,
 } from "@/lib/api/policies.api";
 
 export function usePolicies(filters: PolicyFilters = {}) {
@@ -32,10 +33,10 @@ export function usePolicyDetail(id: string | null) {
   });
 }
 
-export function usePolicyAcceptances(id: string | null, page = 1) {
+export function usePolicyAcceptances(id: string | null, filters: AcceptancesFilter = {}) {
   return useQuery({
-    queryKey: [...queryKeys.policies.detail(id || ''), 'acceptances', page],
-    queryFn: () => getPolicyAcceptances(id!, page),
+    queryKey: [...queryKeys.policies.detail(id || ''), 'acceptances', filters],
+    queryFn: () => getPolicyAcceptances(id!, filters),
     enabled: !!id,
   });
 }
@@ -80,7 +81,13 @@ export function usePolicyMutations() {
       mutationFn: ({ id, data }: { id: string; data: object }) => updatePolicy(id, data),
       onSuccess: invalidate,
     }),
+    restorePolicy: useMutation({
+      mutationFn: ({ id, status = 'draft' }: { id: string; status?: 'draft' | 'active' }) =>
+        restorePolicy(id, status),
+      onSuccess: invalidate,
+    }),
     deletePolicy: useMutation({ mutationFn: deletePolicy, onSuccess: invalidate }),
+    hardDeletePolicy: useMutation({ mutationFn: hardDeletePolicy, onSuccess: invalidate }),
     acceptPolicy: useMutation({
       mutationFn: acceptPolicy,
       onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.policies.active }),

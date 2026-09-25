@@ -96,17 +96,29 @@ export interface PolicyVersionDetail extends PolicyVersion {
   contentText?: string;
 }
 
+export interface CompliancePolicySummary {
+  _id: string;
+  title: string;
+  version: number;
+  policyType?: PolicyType;
+  acceptedCount: number;
+  pendingCount: number;
+}
+
+export interface NonCompliantEmployee extends UserRef {
+  position?: string;
+  department?: { name: string } | null;
+  missingPolicies: Array<{ _id: string; title: string; version: number }>;
+  acceptedPolicies: Array<{ _id: string; title: string; version: number }>;
+  completionPercentage: number;
+  completionRatio: string;
+}
+
 export interface ComplianceReport {
-  policies: {
-    _id: string;
-    title: string;
-    version: number;
-    acceptedCount: number;
-    pendingCount: number;
-  }[];
+  policies: CompliancePolicySummary[];
   totalEmployees: number;
   fullyCompliant: number;
-  nonCompliant: (UserRef & { position?: string; department?: { name: string } })[];
+  nonCompliant: NonCompliantEmployee[];
 }
 
 export interface Pagination {
@@ -120,6 +132,18 @@ export interface PolicyFilters {
   page?: number;
   limit?: number;
   status?: string;
+  policyType?: string;
+  isRequired?: boolean;
+  search?: string;
+  sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'version';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AcceptancesFilter {
+  page?: number;
+  limit?: number;
+  version?: number | "all";
+  search?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -153,7 +177,12 @@ export const listPolicies = (
   const params = new URLSearchParams();
   if (filters.page) params.set("page", String(filters.page));
   if (filters.limit) params.set("limit", String(filters.limit));
-  if (filters.status) params.set("status", filters.status);
+  if (filters.status && filters.status !== "all") params.set("status", filters.status);
+  if (filters.policyType && filters.policyType !== "all") params.set("policyType", filters.policyType);
+  if (typeof filters.isRequired === "boolean") params.set("isRequired", String(filters.isRequired));
+  if (filters.search) params.set("search", filters.search);
+  if (filters.sortBy) params.set("sortBy", filters.sortBy);
+  if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
   return apiAxios.get(`/policies?${params}`).then(unwrap);
 };
 
@@ -169,6 +198,9 @@ export const createPolicy = (data: object): Promise<PolicyDetail> =>
 export const updatePolicy = (id: string, data: object): Promise<PolicyDetail> =>
   apiAxios.put(`/policies/${id}`, data).then(unwrap);
 
+export const restorePolicy = (id: string, status: 'draft' | 'active' = 'draft'): Promise<PolicyDetail> =>
+  apiAxios.post(`/policies/${id}/restore`, { status }).then(unwrap);
+
 export const deletePolicy = (id: string) =>
   apiAxios.delete(`/policies/${id}`);
 
@@ -178,10 +210,16 @@ export const hardDeletePolicy = (id: string) =>
 // Acceptances
 export const getPolicyAcceptances = (
   id: string,
-  page = 1,
-  limit = 20
-): Promise<{ acceptances: PolicyAcceptanceRecord[]; pagination: Pagination }> =>
-  apiAxios.get(`/policies/${id}/acceptances?page=${page}&limit=${limit}`).then(unwrap);
+  filters: AcceptancesFilter = {}
+): Promise<{ acceptances: PolicyAcceptanceRecord[]; currentVersion?: number; pagination: Pagination }> => {
+  const params = new URLSearchParams();
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.version !== undefined && filters.version !== "all") params.set("version", String(filters.version));
+  else if (filters.version === "all") params.set("version", "all");
+  if (filters.search) params.set("search", filters.search);
+  return apiAxios.get(`/policies/${id}/acceptances?${params}`).then(unwrap);
+};
 
 // Compliance
 export const getComplianceReport = (): Promise<ComplianceReport> =>
