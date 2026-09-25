@@ -80,7 +80,7 @@ function renderMarkdown(text: string): string {
   processed = processed
     .replace(
       /`([^`]+)`/g,
-      '<code class="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-mono text-[12px] px-1.5 py-0.5 rounded-md border border-emerald-200/80 dark:border-emerald-800/80">$1</code>'
+      '<code class="bg-brand-50 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 font-mono text-[12px] px-1.5 py-0.5 rounded-md border border-brand-200 dark:border-brand-800">$1</code>'
     )
     .replace(
       /\*\*(.+?)\*\*/g,
@@ -199,7 +199,7 @@ function SourcePills({ sources }: { sources: Source[] }) {
   return (
     <div className="mt-3 pt-2.5 border-t border-border/40">
       <div className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
-        <Paperclip className="w-3 h-3 text-emerald-500" />
+        <Paperclip className="w-3 h-3 text-brand-500" />
         <span>Verified Citations & Context:</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -247,7 +247,7 @@ function CopyButton({ text }: { text: string }) {
       aria-label="Copy response"
     >
       {copied ? (
-        <Check className="w-3.5 h-3.5 text-emerald-500" />
+        <Check className="w-3.5 h-3.5 text-brand-accent" />
       ) : (
         <Copy className="w-3.5 h-3.5" />
       )}
@@ -391,14 +391,14 @@ export function FloatingAiAssistant() {
           onClick={() => setIsOpen(true)}
           aria-label="Open AI Assistant (Ctrl+J)"
           title="Open AI Assistant (Ctrl+J)"
-          className="fixed bottom-6 right-6 z-40 group flex items-center gap-2.5 px-4 py-3 rounded-full shadow-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-950/20 hover:shadow-emerald-950/30 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 border border-emerald-400/30"
+          className="fixed bottom-6 right-6 z-40 group flex items-center gap-2.5 px-4 py-3 rounded-full shadow-xl bg-gradient-to-r from-brand-600 via-brand-700 to-brand-800 hover:from-brand-500 hover:to-brand-700 text-white shadow-brand-950/25 hover:shadow-brand-950/35 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 border border-brand-400/30"
         >
           <div className="relative">
-            <Sparkles className="w-5 h-5 transition-transform duration-200 group-hover:rotate-12" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-300 rounded-full border-2 border-emerald-800 animate-pulse" />
+            <Sparkles className="w-5 h-5 text-brand-accent transition-transform duration-200 group-hover:rotate-12" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-accent rounded-full border-2 border-brand-950 animate-pulse" />
           </div>
           <span className="text-sm font-semibold tracking-wide">Ask AI</span>
-          <kbd className="hidden sm:inline-flex items-center text-[10px] bg-black/20 text-white/90 px-1.5 py-0.5 rounded font-mono font-medium">
+          <kbd className="hidden sm:inline-flex items-center text-[10px] bg-black/25 text-white/90 px-1.5 py-0.5 rounded font-mono font-medium">
             Ctrl+J
           </kbd>
         </button>
@@ -413,14 +413,14 @@ export function FloatingAiAssistant() {
           {/* ─── Header ────────────────────────────────────────────── */}
           <DialogHeader className="px-5 py-3.5 border-b border-border/70 bg-secondary/30 shrink-0 flex flex-row items-center justify-between text-left">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-900/20">
-                <Sparkles className="w-4.5 h-4.5" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-md shadow-brand-950/20">
+                <Sparkles className="w-4.5 h-4.5 text-brand-accent" />
               </div>
               <div>
                 <DialogTitle className="text-sm sm:text-base font-bold flex items-center gap-2 text-foreground">
                   <span>{appConfig.ai.assistantName}</span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-brand-accent/15 text-brand-800 dark:text-brand-200 border border-brand-accent/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
                     gemini-3.8-flash
                   </span>
                 </DialogTitle>
@@ -452,8 +452,8 @@ export function FloatingAiAssistant() {
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-5 bg-background/50">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col justify-center items-center text-center max-w-xl mx-auto py-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 mb-4 shadow-inner">
-                  <Sparkles className="w-7 h-7" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500/15 to-brand-accent/10 border border-brand-500/20 flex items-center justify-center text-brand-600 dark:text-brand-300 mb-4 shadow-inner">
+                  <Sparkles className="w-7 h-7 text-brand-600 dark:text-brand-300" />
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-foreground">
                   How can I assist your work today?
@@ -472,10 +472,10 @@ export function FloatingAiAssistant() {
                       <button
                         key={i}
                         onClick={() => handleSend(st.prompt)}
-                        className="group flex flex-col p-3 rounded-xl border border-border/70 bg-card hover:bg-secondary/50 hover:border-emerald-500/40 transition-all text-left shadow-xs hover:shadow-sm"
+                        className="group flex flex-col p-3 rounded-xl border border-border/70 bg-card hover:bg-secondary/50 hover:border-brand-500/40 transition-all text-left shadow-xs hover:shadow-sm"
                       >
-                        <div className="flex items-center gap-2 text-xs font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                          <Icon className="w-3.5 h-3.5 text-emerald-500" />
+                        <div className="flex items-center gap-2 text-xs font-semibold text-foreground group-hover:text-brand-600 dark:group-hover:text-brand-300">
+                          <Icon className="w-3.5 h-3.5 text-brand-500" />
                           <span>{st.title}</span>
                         </div>
                         <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-snug">
@@ -512,7 +512,7 @@ export function FloatingAiAssistant() {
                       className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold ${
                         isUser
                           ? "bg-primary text-primary-foreground shadow-xs"
-                          : "bg-emerald-600 text-white shadow-xs"
+                          : "bg-brand-600 text-white shadow-xs"
                       }`}
                     >
                       {isUser ? userInitial : <Bot className="w-4 h-4" />}
@@ -543,7 +543,7 @@ export function FloatingAiAssistant() {
                             />
                             {/* Blinking cursor while streaming token */}
                             {isLatestStreaming && (
-                              <span className="inline-block w-1.5 h-3.5 ml-1 bg-emerald-500 animate-pulse align-middle" />
+                              <span className="inline-block w-1.5 h-3.5 ml-1 bg-brand-accent animate-pulse align-middle" />
                             )}
                             {/* Action row */}
                             {msg.content && !isStreaming && (
@@ -570,15 +570,15 @@ export function FloatingAiAssistant() {
               messages.length > 0 &&
               messages[messages.length - 1].role === "user" && (
                 <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                     <Bot className="w-4 h-4" />
                   </div>
                   <div className="bg-card border border-border/70 rounded-2xl rounded-tl-xs px-4 py-3 shadow-xs">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="inline-flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" />
+                        <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-1.5 h-1.5 bg-brand-accent rounded-full animate-bounce" />
                       </span>
                       <span>Retrieving scoped context & parsing files…</span>
                     </div>
@@ -602,7 +602,7 @@ export function FloatingAiAssistant() {
 
           {/* ─── Footer / Input Bar ─────────────────────────────────── */}
           <div className="p-3 sm:p-4 border-t border-border/70 bg-secondary/20 shrink-0">
-            <div className="flex gap-2 items-end bg-background rounded-xl border border-border/80 shadow-xs px-3 py-2 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+            <div className="flex gap-2 items-end bg-background rounded-xl border border-border/80 shadow-xs px-3 py-2 focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/10 transition-all">
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -629,7 +629,7 @@ export function FloatingAiAssistant() {
                   size="icon"
                   disabled={!input.trim()}
                   onClick={() => handleSend()}
-                  className="w-8 h-8 shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs disabled:opacity-40 transition-all"
+                  className="w-8 h-8 shrink-0 rounded-lg bg-brand-600 hover:bg-brand-700 text-white shadow-xs disabled:opacity-40 transition-all"
                   title="Send message (Enter)"
                 >
                   <Send className="w-3.5 h-3.5" />
@@ -642,8 +642,8 @@ export function FloatingAiAssistant() {
                 Press <kbd className="font-mono">Enter</kbd> to send,{" "}
                 <kbd className="font-mono">Shift+Enter</kbd> for line break
               </span>
-              <span className="ml-auto inline-flex items-center gap-1 text-emerald-600/90 dark:text-emerald-400">
-                <CheckCircle2 className="w-3 h-3" />
+              <span className="ml-auto inline-flex items-center gap-1 text-brand-700 dark:text-brand-300">
+                <CheckCircle2 className="w-3 h-3 text-brand-accent" />
                 Zero data leakage • Strictly scoped by user role
               </span>
             </div>

@@ -134,12 +134,11 @@ export function AppLogo({
       return (
         <div
           className={cn(
-            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-sm",
+            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-sm bg-primary",
             iconClassName
           )}
-          style={{ background: "#059669" }}
         >
-          <IconComponent className="h-5 w-5 text-white" />
+          <IconComponent className="h-5 w-5 text-primary-foreground" />
         </div>
       );
     }
@@ -236,7 +235,7 @@ export function AppLogo({
             {renderIcon()}
             <span
               className={cn(
-                "text-lg font-semibold text-white tracking-tight transition-colors group-hover:text-emerald-400",
+                "text-lg font-semibold text-white tracking-tight transition-colors group-hover:text-brand-accent",
                 textClassName
               )}
             >

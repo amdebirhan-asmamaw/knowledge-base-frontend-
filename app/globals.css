@@ -5,94 +5,153 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f8faf9;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  /* Brand Scale */
+  --brand-50: #eff9f8;
+  --brand-100: #d7f0ec;
+  --brand-200: #b3e1dc;
+  --brand-300: #86c9c3;
+  --brand-400: #5baaa4;
+  --brand-500: #3b8e88;
+  --brand-600: #0b7a6b;
+  --brand-700: #1c6259;
+  --brand-800: #1a4f49;
+  --brand-900: #18413e;
+  --brand-950: #0c2624;
+  /* Yellow-Green (Crayola) Accent */
+  --brand-accent: #aed580;
 
-  /* Primary — Emerald-600 */
-  --primary: #059669;
+  /* Surfaces & Canvas */
+  --background: oklch(0.98 0 0);
+  --foreground: #0c2624;
+  --card: #ffffff;
+  --card-foreground: #0c2624;
+  --popover: #ffffff;
+  --popover-foreground: #0c2624;
+
+  /* Primary — Brand-600 Deep Teal */
+  --primary: #0b7a6b;
   --primary-foreground: #ffffff;
 
-  /* Secondary — neutral emerald-tinted surface */
-  --secondary: #f0fdf4;
-  --secondary-foreground: #064e3b;
+  /* Secondary — Brand-50 subtle teal surface */
+  --secondary: #eff9f8;
+  --secondary-foreground: #0c2624;
 
-  /* Muted — subtle surfaces */
-  --muted: #e2e8f0;
-  --muted-foreground: #64748b;
+  /* Muted — soft subtle teal-tinted slate */
+  --muted: #f0f7f6;
+  --muted-foreground: #406762;
 
-  /* Accent — Emerald-800 for links & highlights */
-  --accent: #065f46;
-  --accent-foreground: #ffffff;
+  /* Accent — Yellow-Green Crayola */
+  --accent: #aed580;
+  --accent-foreground: #0c2624;
 
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
 
-  --border: #e2e8f0;
+  --border: #d7f0ec;
   --input: #ffffff;
-  --ring: #10b981;
+  --ring: #0b7a6b;
 
-  --chart-1: #059669;
-  --chart-2: #047857;
-  --chart-3: #065f46;
-  --chart-4: #064e3b;
-  --chart-5: #34d399;
+  --chart-1: #0b7a6b;
+  --chart-2: #3b8e88;
+  --chart-3: #aed580;
+  --chart-4: #1c6259;
+  --chart-5: #5baaa4;
 
   --radius: 0.625rem;
 
   /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #059669;
+  --sidebar-foreground: #0c2624;
+  --sidebar-primary: #0b7a6b;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ecfdf5;
-  --sidebar-accent-foreground: #065f46;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #10b981;
+  --sidebar-accent: #eff9f8;
+  --sidebar-accent-foreground: #0b7a6b;
+  --sidebar-border: #d7f0ec;
+  --sidebar-ring: #0b7a6b;
 }
 
-
 .dark {
-  --background: #061812;
-  --foreground: #f8faf9;
-  --card: #082119;
-  --card-foreground: #f8faf9;
-  --popover: #082119;
-  --popover-foreground: #f8faf9;
-  --primary: #10b981;
-  --primary-foreground: #061812;
-  --secondary: #0d3126;
-  --secondary-foreground: #ecfdf5;
-  --muted: #133e31;
-  --muted-foreground: #94a3b8;
-  --accent: #34d399;
-  --accent-foreground: #061812;
+  /* Dark mode brand scale inheritance with deep midnight teal canvas */
+  --background: #0c2624;
+  --foreground: #eff9f8;
+  --card: #113431;
+  --card-foreground: #eff9f8;
+  --popover: #113431;
+  --popover-foreground: #eff9f8;
+
+  /* Primary in dark mode: vibrant balanced teal */
+  --primary: #3b8e88;
+  --primary-foreground: #ffffff;
+
+  /* Secondary — brand-900 night surface */
+  --secondary: #18413e;
+  --secondary-foreground: #eff9f8;
+
+  /* Muted */
+  --muted: #18413e;
+  --muted-foreground: #86c9c3;
+
+  /* Accent — Yellow-Green Crayola pop */
+  --accent: #aed580;
+  --accent-foreground: #0c2624;
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #133e31;
-  --input: #0d3126;
-  --ring: #10b981;
-  --chart-1: #10b981;
-  --chart-2: #34d399;
-  --chart-3: #059669;
-  --chart-4: #047857;
-  --chart-5: #6ee7b7;
-  --sidebar: #082119;
-  --sidebar-foreground: #f8faf9;
-  --sidebar-primary: #10b981;
-  --sidebar-primary-foreground: #061812;
-  --sidebar-accent: #0d3126;
-  --sidebar-accent-foreground: #ecfdf5;
-  --sidebar-border: #133e31;
-  --sidebar-ring: #10b981;
+
+  --border: #1a4f49;
+  --input: #18413e;
+  --ring: #aed580;
+
+  --chart-1: #5baaa4;
+  --chart-2: #aed580;
+  --chart-3: #3b8e88;
+  --chart-4: #86c9c3;
+  --chart-5: #d7f0ec;
+
+  /* Dark Sidebar */
+  --sidebar: #091f1d;
+  --sidebar-foreground: #eff9f8;
+  --sidebar-primary: #5baaa4;
+  --sidebar-primary-foreground: #0c2624;
+  --sidebar-accent: #18413e;
+  --sidebar-accent-foreground: #aed580;
+  --sidebar-border: #1a4f49;
+  --sidebar-ring: #aed580;
 }
 
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+
+  /* Direct Brand scale tokens */
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand: var(--brand-600);
+
+  /* Emerald aliases mapped directly to the brand scale for immediate codebase harmony */
+  --color-emerald-50: var(--brand-50);
+  --color-emerald-100: var(--brand-100);
+  --color-emerald-200: var(--brand-200);
+  --color-emerald-300: var(--brand-300);
+  --color-emerald-400: var(--brand-400);
+  --color-emerald-500: var(--brand-500);
+  --color-emerald-600: var(--brand-600);
+  --color-emerald-700: var(--brand-700);
+  --color-emerald-800: var(--brand-800);
+  --color-emerald-900: var(--brand-900);
+  --color-emerald-950: var(--brand-950);
+
+  /* Semantic UI Tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -145,20 +204,20 @@
 
 .bg-tech-grid-dark {
   background-image: 
-    linear-gradient(to right, rgba(52, 211, 153, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(52, 211, 153, 0.08) 1px, transparent 1px);
+    linear-gradient(to right, rgba(134, 201, 195, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(134, 201, 195, 0.08) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
 .bg-tech-grid-light {
   background-image: 
-    linear-gradient(to right, rgba(16, 185, 129, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+    linear-gradient(to right, rgba(11, 122, 107, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 122, 107, 0.07) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .bg-blueprint-pattern {
-  background-image: radial-gradient(rgba(16, 185, 129, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(11, 122, 107, 0.12) 1px, transparent 1px);
   background-size: 18px 18px;
 }
 
