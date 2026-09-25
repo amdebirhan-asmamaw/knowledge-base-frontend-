@@ -341,7 +341,7 @@ export default function StructureManagementPage() {
       {canCreateCategory && (
         <Card className="p-5 border shadow-sm rounded-2xl bg-white">
           <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Folder className="w-4 h-4 text-teal-600" />
+            <Folder className="w-4 h-4 text-primary" />
             <span>Add New Category</span>
           </h2>
           <div className="flex gap-2">
@@ -355,7 +355,7 @@ export default function StructureManagementPage() {
             <Button
               onClick={handleAddCategory}
               disabled={!newCatName.trim() || busyId === "new-cat"}
-              className="shrink-0 gap-1.5 bg-[#3b82f6] hover:bg-[#2563eb] text-white px-5 h-10 font-medium"
+              className="shrink-0 gap-1.5 bg-primary hover:bg-brand-700 text-primary-foreground px-5 h-10 font-medium shadow-sm transition-all"
             >
               {busyId === "new-cat" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -402,8 +402,8 @@ export default function StructureManagementPage() {
                   onClick={() => toggleCat(category.id)}
                 >
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    {/* Left Chevron in soft teal container */}
-                    <div className="p-1.5 rounded-lg bg-teal-50 text-teal-700 shrink-0 transition-transform">
+                    {/* Left Chevron in soft brand container */}
+                    <div className="p-1.5 rounded-lg bg-brand-50 text-brand-700 shrink-0 transition-transform">
                       {isCatExpanded ? (
                         <ChevronDown className="w-4 h-4" />
                       ) : (
@@ -504,7 +504,6 @@ export default function StructureManagementPage() {
                           handleToggleCategory(category.id, category.isActive !== false)
                         }
                         disabled={busyId === `toggle-cat-${category.id}`}
-                        className="data-[state=checked]:bg-[#3b82f6]"
                       />
                     </div>
 
@@ -573,7 +572,7 @@ export default function StructureManagementPage() {
                               ) : (
                                 <ChevronRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                               )}
-                              <BookOpen className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                              <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
 
                               {editingSecId === section.id ? (
                                 /* ── Inline rename section ── */
@@ -659,7 +658,7 @@ export default function StructureManagementPage() {
                                     handleToggleSection(section.id, section.isActive !== false)
                                   }
                                   disabled={busyId === `toggle-sec-${section.id}`}
-                                  className="scale-75 data-[state=checked]:bg-[#3b82f6]"
+                                  className="scale-75"
                                 />
                               </div>
 
@@ -688,7 +687,7 @@ export default function StructureManagementPage() {
                                     e.stopPropagation();
                                     openNewDocument(category.id, section.id);
                                   }}
-                                  className="text-slate-400 hover:text-teal-700 hover:bg-teal-50"
+                                  className="text-slate-400 hover:text-primary hover:bg-brand-50"
                                   title="Add document to this section"
                                 >
                                   <Plus className="w-4 h-4" />
@@ -733,11 +732,11 @@ export default function StructureManagementPage() {
                                     <div
                                       key={doc._id}
                                       onClick={() => openViewDocument(doc._id)}
-                                      className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/70 text-left hover:bg-teal-50/50 hover:border-teal-200 transition-colors group cursor-pointer shadow-2xs"
+                                      className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/70 text-left hover:bg-brand-50/50 hover:border-brand-200 transition-colors group cursor-pointer shadow-2xs"
                                     >
                                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                        <FileText className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600 shrink-0 transition-colors" />
-                                        <span className="text-sm font-medium text-slate-800 truncate group-hover:text-teal-900 transition-colors">
+                                        <FileText className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary shrink-0 transition-colors" />
+                                        <span className="text-sm font-medium text-slate-800 truncate group-hover:text-brand-900 transition-colors">
                                           {doc.title}
                                         </span>
                                         {doc.docId && (
@@ -760,7 +759,7 @@ export default function StructureManagementPage() {
                                           variant="ghost"
                                           size="icon-sm"
                                           onClick={() => openViewDocument(doc._id)}
-                                          className="text-slate-400 hover:text-teal-700 hover:bg-teal-50"
+                                          className="text-slate-400 hover:text-primary hover:bg-brand-50"
                                           title="View document"
                                         >
                                           <Eye className="w-3.5 h-3.5" />
@@ -772,7 +771,7 @@ export default function StructureManagementPage() {
                                             variant="ghost"
                                             size="icon-sm"
                                             onClick={() => openEditDocument(doc._id)}
-                                            className="text-slate-400 hover:text-teal-700 hover:bg-teal-50"
+                                            className="text-slate-400 hover:text-primary hover:bg-brand-50"
                                             title="Edit document"
                                           >
                                             <Edit2 className="w-3.5 h-3.5" />
@@ -799,7 +798,7 @@ export default function StructureManagementPage() {
                               {canCreateContent && (
                                 <button
                                   onClick={() => openNewDocument(category.id, section.id)}
-                                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-dashed border-slate-300 text-xs font-medium text-slate-500 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50/50 transition-colors"
+                                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-dashed border-slate-300 text-xs font-medium text-slate-500 hover:border-primary hover:text-primary hover:bg-brand-50/50 transition-colors"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
                                   <span>Add document to &ldquo;{section.name}&rdquo;</span>
@@ -827,7 +826,7 @@ export default function StructureManagementPage() {
                             size="sm"
                             disabled={!newSecName.trim() || busyId === `new-sec-${category.id}`}
                             onClick={() => handleAddSection(category.id)}
-                            className="shrink-0 bg-teal-600 hover:bg-teal-700 text-white"
+                            className="shrink-0 bg-primary hover:bg-brand-700 text-primary-foreground"
                           >
                             {busyId === `new-sec-${category.id}` ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -850,7 +849,7 @@ export default function StructureManagementPage() {
                       ) : (
                         <button
                           onClick={() => setAddingSectionToCat(category.id)}
-                          className="ml-2 sm:ml-6 mt-1 flex items-center gap-1.5 text-xs font-medium text-teal-700 hover:text-teal-800 transition-colors"
+                          className="ml-2 sm:ml-6 mt-1 flex items-center gap-1.5 text-xs font-medium text-primary hover:text-brand-700 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>Add Section to &ldquo;{category.name}&rdquo;</span>

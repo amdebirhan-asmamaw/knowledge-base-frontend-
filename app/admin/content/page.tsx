@@ -70,7 +70,7 @@ export default function ContentManagementPage() {
 
         <Button
           onClick={() => setShowNewForm(true)}
-          className="gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 h-10 font-medium rounded-xl shadow-xs self-start sm:self-auto"
+          className="gap-2 bg-primary hover:bg-brand-700 text-primary-foreground px-5 h-10 font-medium rounded-xl shadow-xs self-start sm:self-auto transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>New Document</span>
@@ -85,7 +85,7 @@ export default function ContentManagementPage() {
           placeholder="Search documents by title, category, or section..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-9 h-11 text-sm bg-white border-slate-200/90 rounded-xl shadow-2xs focus-visible:ring-2 focus-visible:ring-blue-500/20"
+          className="pl-10 pr-9 h-11 text-sm bg-white border-slate-200/90 rounded-xl shadow-2xs focus-visible:ring-2 focus-visible:ring-ring/20"
         />
         {searchQuery && (
           <button

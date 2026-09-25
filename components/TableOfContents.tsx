@@ -109,7 +109,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
             style={{ paddingLeft: `${(item.level - 1) * 12}px` }}
             className={`block w-full text-left text-[13px] leading-tight transition-all duration-150 ${
               activeId === item.id
-                ? "text-[#3b82f6] font-semibold"
+                ? "text-primary font-semibold"
                 : "text-slate-500 hover:text-slate-800 font-medium"
             }`}
           >

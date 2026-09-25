@@ -149,7 +149,7 @@ export default function PublicMinutesPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <PageHeader
-        icon={<CalendarCheck className="w-5 h-5" style={{ color: "#2563eb" }} />}
+        icon={<CalendarCheck className="w-5 h-5 text-primary" />}
         title="Meeting Minutes"
         subtitle="Published minutes from your department"
       />

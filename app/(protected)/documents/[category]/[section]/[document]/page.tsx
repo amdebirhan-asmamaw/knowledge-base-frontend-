@@ -50,14 +50,14 @@ export default async function DocumentPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-white">
       {/* Premium minimal Search Header Banner */}
-      <div className="bg-[#ebf1f6] py-7 px-6 flex justify-center items-center print:hidden border-b border-[#e2e8f0]/40">
+      <div className="bg-secondary/60 py-7 px-6 flex justify-center items-center print:hidden border-b border-border">
         <form action="/" method="GET" className="relative w-full max-w-2xl">
-          <Search className="absolute left-4.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+          <Search className="absolute left-4.5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             name="q"
             placeholder="Search"
-            className="w-full pl-13 pr-5 py-3.5 bg-white border border-[#e2e8f0] text-slate-800 text-base rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/20 transition-all font-medium placeholder:text-slate-400 placeholder:font-normal"
+            className="w-full pl-13 pr-5 py-3.5 bg-card border border-border text-foreground text-base rounded-xl shadow-xs focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-muted-foreground placeholder:font-normal"
           />
         </form>
       </div>

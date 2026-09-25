@@ -26,7 +26,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                 {item.title}
               </Link>
             ) : (
-              <span className="text-[#3b82f6] font-normal">
+              <span className="text-primary font-normal">
                 {item.title}
               </span>
             )}
