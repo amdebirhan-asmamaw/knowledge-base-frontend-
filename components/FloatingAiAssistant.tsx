@@ -267,6 +267,7 @@ export function FloatingAiAssistant() {
     sourcesMap,
     isStreaming,
     error,
+    activeModel,
     send,
     cancel,
     reset,
@@ -421,7 +422,7 @@ export function FloatingAiAssistant() {
                   <span>{appConfig.ai.assistantName}</span>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-brand-accent/15 text-brand-800 dark:text-brand-200 border border-brand-accent/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
-                    gemini-3.8-flash
+                    {activeModel || "gemini-flash"}
                   </span>
                 </DialogTitle>
                 <DialogDescription className="text-[11px] text-muted-foreground mt-0.5">

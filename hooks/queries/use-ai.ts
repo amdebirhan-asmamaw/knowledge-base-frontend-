@@ -9,12 +9,13 @@ interface AiChatState {
   sourcesMap: Record<number, Source[]>;
   isStreaming: boolean;
   error: string | null;
+  activeModel: string | null;
 }
 
 type Action =
   | { type: "send"; content: string }
   | { type: "delta"; text: string }
-  | { type: "sources"; index: number; sources: Source[] }
+  | { type: "sources"; index: number; sources: Source[]; model?: string }
   | { type: "done" }
   | { type: "error"; message: string }
   | { type: "reset" };
@@ -24,6 +25,7 @@ const initialState: AiChatState = {
   sourcesMap: {},
   isStreaming: false,
   error: null,
+  activeModel: null,
 };
 
 function reducer(state: AiChatState, action: Action): AiChatState {
@@ -49,7 +51,11 @@ function reducer(state: AiChatState, action: Action): AiChatState {
       return { ...state, messages };
     }
     case "sources":
-      return { ...state, sourcesMap: { ...state.sourcesMap, [action.index]: action.sources } };
+      return {
+        ...state,
+        sourcesMap: { ...state.sourcesMap, [action.index]: action.sources },
+        activeModel: action.model ?? state.activeModel,
+      };
     case "done":
       return { ...state, isStreaming: false };
     case "error": {
@@ -90,7 +96,8 @@ export function useAiChat() {
     try {
       for await (const event of streamChatMessage(trimmed, history, controller.signal)) {
         if (event.type === "sources") {
-          dispatch({ type: "sources", index: assistantIndex, sources: event.sources });
+          const model = (event.meta as { model?: string } | undefined)?.model;
+          dispatch({ type: "sources", index: assistantIndex, sources: event.sources, model });
         } else if (event.type === "delta") {
           dispatch({ type: "delta", text: event.text });
         } else if (event.type === "error") {
@@ -127,6 +134,7 @@ export function useAiChat() {
     sourcesMap: state.sourcesMap,
     isStreaming: state.isStreaming,
     error: state.error,
+    activeModel: state.activeModel,
     send,
     cancel,
     reset,
