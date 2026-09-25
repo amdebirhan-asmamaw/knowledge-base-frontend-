@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import {
   listSurveys, getSurvey, createSurvey, updateSurvey, deleteSurvey,
-  getSurveyResponses, getSurveySummary, type SurveyFilters,
+  getSurveyResponses, getSurveySummary, getSurveyStats, cloneSurvey, updateSurveyStatus,
+  getMySurveyResponses, getMyResponseForSurvey,
+  type SurveyFilters,
 } from "@/lib/api/surveys.api";
 
 export function useSurveys(filters: SurveyFilters = {}) {
@@ -18,8 +20,19 @@ export function useSurveys(filters: SurveyFilters = {}) {
     surveys: data.surveys, pagination: data.pagination,
     isLoading: query.isLoading,
     error: query.error instanceof Error ? query.error.message : query.error ? String(query.error) : null,
-    invalidate: () => queryClient.invalidateQueries({ queryKey: queryKeys.surveys.all }),
+    invalidate: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.surveys.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.surveys.stats });
+    },
   };
+}
+
+export function useSurveyStats() {
+  return useQuery({
+    queryKey: queryKeys.surveys.stats,
+    queryFn: getSurveyStats,
+    staleTime: 30_000,
+  });
 }
 
 export function useSurveyDetail(id: string | null) {
@@ -46,9 +59,27 @@ export function useSurveySummary(id: string | null) {
   });
 }
 
+export function useMySurveyResponses(page = 1) {
+  return useQuery({
+    queryKey: queryKeys.surveys.myResponses(page),
+    queryFn: () => getMySurveyResponses(page),
+  });
+}
+
+export function useMyResponseForSurvey(surveyId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.surveys.myDetail(surveyId || ''),
+    queryFn: () => getMyResponseForSurvey(surveyId!),
+    enabled: !!surveyId,
+  });
+}
+
 export function useSurveyMutations() {
   const queryClient = useQueryClient();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.surveys.all });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.surveys.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.surveys.stats });
+  };
 
   return {
     createSurvey: useMutation({ mutationFn: createSurvey, onSuccess: invalidate }),
@@ -56,6 +87,16 @@ export function useSurveyMutations() {
       mutationFn: ({ id, data }: { id: string; data: object }) => updateSurvey(id, data),
       onSuccess: invalidate,
     }),
+    updateStatus: useMutation({
+      mutationFn: ({ id, status }: { id: string; status: "draft" | "published" | "closed" }) =>
+        updateSurveyStatus(id, status),
+      onSuccess: invalidate,
+    }),
+    cloneSurvey: useMutation({
+      mutationFn: (id: string) => cloneSurvey(id),
+      onSuccess: invalidate,
+    }),
     deleteSurvey: useMutation({ mutationFn: deleteSurvey, onSuccess: invalidate }),
   };
 }
+
