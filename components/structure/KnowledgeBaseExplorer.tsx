@@ -48,7 +48,17 @@ import type { CategoryNode, SectionNode } from "@/lib/api/documents.api";
 import type { ActiveSelection, ViewMode, FlatDocument, SortField, SortOrder } from "./types";
 import { toast } from "sonner";
 
-export function KnowledgeBaseExplorer() {
+interface KnowledgeBaseExplorerProps {
+  title?: string;
+  subtitle?: string;
+  defaultViewMode?: ViewMode;
+}
+
+export function KnowledgeBaseExplorer({
+  title = "Documents",
+  subtitle = "Browse, filter, preview, and manage documents across your organizational structure",
+  defaultViewMode = "list",
+}: KnowledgeBaseExplorerProps = {}) {
   const router = useRouter();
   const { user, hasPermission } = useAuth();
   const { categories, isLoading, deleteCategory, deleteSection, deleteDocument } = useDocumentTree();
@@ -262,10 +272,10 @@ export function KnowledgeBaseExplorer() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Knowledge Base Explorer
+            {title}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Organize knowledge base categories, departmental sections, and documents
+            {subtitle}
           </p>
         </div>
 

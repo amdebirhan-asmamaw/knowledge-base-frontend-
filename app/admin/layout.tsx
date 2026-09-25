@@ -109,7 +109,7 @@ const navGroups: NavGroup[] = [
             href: "/admin/content",
             label: "Documents",
             icon: FileText,
-            scopePermission: { domain: "documents", action: "read" },
+            scopePermission: { domain: "content", action: "read" },
           },
         ],
       },
