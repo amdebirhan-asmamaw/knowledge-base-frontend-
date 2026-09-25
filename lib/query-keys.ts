@@ -11,6 +11,7 @@ export const queryKeys = {
   },
   clients: {
     all: ["clients"] as const,
+    stats: ["clients", "stats"] as const,
     list: (filters: Record<string, unknown>) =>
       ["clients", "list", filters] as const,
     detail: (id: string) => ["clients", "detail", id] as const,

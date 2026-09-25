@@ -11,15 +11,20 @@ import {
   deleteObservation,
   listClients,
   getClient,
+  getClientStats,
+  touchClient,
+  assignEmployeesToClient,
   listObservations,
   updateClient,
   updateContact,
   updateObservation,
   type Client,
   type ClientListResult,
+  type ClientStats,
   type ClientDetail,
   type ClientStatus,
   type ClientTier,
+  type AssignedEmployee,
   type Observation,
   type ObservationType,
 } from "@/lib/api/clients.api";
@@ -30,9 +35,35 @@ type ClientListFilters = {
   industry?: string;
   status?: ClientStatus;
   tier?: ClientTier;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
 };
+
+/**
+ * Fetch executive stats across all clients.
+ */
+export function useClientStats() {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: queryKeys.clients.stats,
+    queryFn: () => getClientStats(),
+  });
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.clients.stats });
+
+  return {
+    stats: query.data ?? null,
+    isLoading: query.isLoading,
+    error: query.error instanceof Error
+      ? query.error.message
+      : query.error ? String(query.error) : null,
+    invalidate,
+  };
+}
 
 /**
  * Fetch a paginated list of clients.
@@ -45,8 +76,10 @@ export function useClients(filters: ClientListFilters = {}) {
     queryFn: () => listClients(filters),
   });
 
-  const invalidate = () =>
+  const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.clients.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.clients.stats });
+  };
 
   return {
     data: query.data ?? ({ clients: [], total: 0, page: 1, limit: 20, pages: 1 } as ClientListResult),
@@ -62,8 +95,10 @@ export function useClients(filters: ClientListFilters = {}) {
 export function useClientMutations(clientId?: string) {
   const queryClient = useQueryClient();
 
-  const invalidateClients = () =>
+  const invalidateClients = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.clients.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.clients.stats });
+  };
   const invalidateClientDetail = (id: string) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.clients.detail(id) });
     queryClient.invalidateQueries({ queryKey: queryKeys.clients.observations(id) });
@@ -88,6 +123,23 @@ export function useClientMutations(clientId?: string) {
     onSuccess: (_result, id) => {
       invalidateClients();
       queryClient.removeQueries({ queryKey: queryKeys.clients.detail(id) });
+    },
+  });
+
+  const touch = useMutation({
+    mutationFn: (id: string) => touchClient(id),
+    onSuccess: (_client, id) => {
+      invalidateClients();
+      invalidateClientDetail(id);
+    },
+  });
+
+  const assign = useMutation({
+    mutationFn: ({ id, employeeIds }: { id: string; employeeIds: string[] }) =>
+      assignEmployeesToClient(id, employeeIds),
+    onSuccess: (_data, variables) => {
+      invalidateClients();
+      invalidateClientDetail(variables.id);
     },
   });
 
@@ -127,7 +179,10 @@ export function useClientMutations(clientId?: string) {
       return createObservation(clientId, data);
     },
     onSuccess: () => {
-      if (clientId) invalidateClientDetail(clientId);
+      if (clientId) {
+        invalidateClientDetail(clientId);
+        invalidateClients();
+      }
     },
   });
 
@@ -155,6 +210,8 @@ export function useClientMutations(clientId?: string) {
     createClient: create,
     updateClient: update,
     deleteClient: remove,
+    touchClient: touch,
+    assignEmployees: assign,
     createContact: createContactMutation,
     updateContact: updateContactMutation,
     deleteContact: deleteContactMutation,
@@ -190,6 +247,7 @@ export function useClientDetail(id: string) {
   return {
     detail: query.data ?? null,
     client: query.data?.client ?? null,
+    assignedEmployees: query.data?.assignedEmployees ?? ([] as AssignedEmployee[]),
     typeCounts: query.data?.typeCounts ?? ({} as Record<ObservationType, number>),
     contacts: query.data?.contacts ?? [],
     healthScore: query.data?.healthScore ?? 50,

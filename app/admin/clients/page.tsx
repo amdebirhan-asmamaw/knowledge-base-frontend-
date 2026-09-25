@@ -3,16 +3,30 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   type Client,
   type ClientStatus,
   type ClientTier,
 } from "@/lib/api/clients.api";
-import { useClientMutations, useClients } from "@/hooks/queries";
+import {
+  useClientMutations,
+  useClients,
+  useClientStats,
+} from "@/hooks/queries";
+import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Plus,
   Search,
@@ -36,6 +50,9 @@ import {
   ExternalLink,
   CheckCircle2,
   Clock,
+  Edit,
+  History,
+  ArrowUpDown,
 } from "lucide-react";
 
 // ─── Status & Tier Configurations ────────────────────────────────────────────
@@ -154,7 +171,7 @@ function ClientMonogram({
 
   return (
     <div
-      className={`${sizeClasses} bg-gradient-to-br ${AVATAR_PALETTE[colorIndex]} flex items-center justify-center shrink-0 shadow-sm`}
+      className={`${sizeClasses} bg-gradient-to-br ${AVATAR_PALETTE[colorIndex]} flex items-center justify-center shrink-0 shadow-sm font-semibold select-none`}
     >
       {initials || "CO"}
     </div>
@@ -180,6 +197,8 @@ function CreateClientModal({
     phone: "",
     status: "active" as ClientStatus,
     tier: "" as ClientTier,
+    summary: "",
+    tags: "",
   });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -190,10 +209,27 @@ function CreateClientModal({
     setIsSaving(true);
     setError(null);
     try {
-      const created = await createClient.mutateAsync(form);
+      const payload: Partial<Client> = {
+        name: form.name.trim(),
+        company: form.company.trim() || undefined,
+        industry: form.industry.trim() || undefined,
+        website: form.website.trim() || undefined,
+        email: form.email.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        status: form.status,
+        tier: form.tier,
+        summary: form.summary.trim() || undefined,
+        tags: form.tags
+          ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
+          : [],
+      };
+      const created = await createClient.mutateAsync(payload);
+      toast.success(`Client account "${created.name}" created successfully`);
       onCreate(created);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create client");
+      const msg = err instanceof Error ? err.message : "Failed to create client account";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -352,6 +388,31 @@ function CreateClientModal({
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              Account Overview / Summary
+            </label>
+            <textarea
+              rows={2}
+              value={form.summary}
+              onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
+              placeholder="Key engagement goals, contract scope, or executive context..."
+              className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              Tags (comma separated)
+            </label>
+            <Input
+              value={form.tags}
+              onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+              placeholder="vip, logistics, priority-support"
+              className="h-10"
+            />
+          </div>
+
           <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-border">
             <Button
               type="button"
@@ -380,72 +441,352 @@ function CreateClientModal({
   );
 }
 
+// ─── Edit Client Modal ────────────────────────────────────────────────────────
+
+function EditClientModal({
+  client,
+  onClose,
+  onUpdated,
+}: {
+  client: Client;
+  onClose: () => void;
+  onUpdated: (c: Client) => void;
+}) {
+  const { updateClient } = useClientMutations();
+  const [form, setForm] = useState({
+    name: client.name || "",
+    company: client.company || "",
+    industry: client.industry || "",
+    website: client.website || "",
+    email: client.email || "",
+    phone: client.phone || "",
+    status: client.status || ("active" as ClientStatus),
+    tier: client.tier || ("" as ClientTier),
+    summary: client.summary || "",
+    tags: client.tags ? client.tags.join(", ") : "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      const payload: Partial<Client> = {
+        name: form.name.trim(),
+        company: form.company.trim(),
+        industry: form.industry.trim(),
+        website: form.website.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        status: form.status,
+        tier: form.tier,
+        summary: form.summary.trim(),
+        tags: form.tags
+          ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
+          : [],
+      };
+      const updated = await updateClient.mutateAsync({
+        id: client._id,
+        data: payload,
+      });
+      toast.success(`Client "${updated.name}" updated successfully`);
+      onUpdated(updated);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to update client account";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-6 py-5 border-b border-border flex items-center justify-between bg-muted/30">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-semibold">
+              <Edit className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
+                Edit Client Account
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Update corporate details & account preferences
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
+              Client / Organization Name *
+            </label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              className="h-10"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Industry Sector
+              </label>
+              <Input
+                value={form.industry}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, industry: e.target.value }))
+                }
+                className="h-10"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Account Tier
+              </label>
+              <select
+                value={form.tier}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, tier: e.target.value as ClientTier }))
+                }
+                className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">— Standard / Unassigned —</option>
+                {Object.entries(TIER_CONFIG).map(([val, cfg]) => (
+                  <option key={val} value={val}>
+                    {cfg.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Lifecycle Status
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    status: e.target.value as ClientStatus,
+                  }))
+                }
+                className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
+                  <option key={val} value={val}>
+                    {cfg.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Primary Email
+              </label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, email: e.target.value }))
+                }
+                className="h-10"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Direct Phone
+              </label>
+              <Input
+                value={form.phone}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phone: e.target.value }))
+                }
+                className="h-10"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Company Website
+              </label>
+              <Input
+                type="url"
+                value={form.website}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, website: e.target.value }))
+                }
+                className="h-10"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              Account Overview / Summary
+            </label>
+            <textarea
+              rows={2}
+              value={form.summary}
+              onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
+              className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              Tags (comma separated)
+            </label>
+            <Input
+              value={form.tags}
+              onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+              className="h-10"
+            />
+          </div>
+
+          <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 px-4"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!form.name.trim() || isSaving}
+              className="h-10 px-5 gap-2 bg-primary text-primary-foreground font-medium shadow-sm hover:opacity-95"
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Admin Clients Portfolio Page ───────────────────────────────────────
 
 export default function AdminClientsPage() {
   const router = useRouter();
+  const { user, hasPermission, isAdmin } = useAuth();
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | "">("");
   const [tierFilter, setTierFilter] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
   const [showCreate, setShowCreate] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [touchingId, setTouchingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [mutationError, setMutationError] = useState<string | null>(null);
 
-  const { deleteClient } = useClientMutations();
+  const { deleteClient, touchClient } = useClientMutations();
+  const { stats: globalStats, isLoading: isStatsLoading } = useClientStats();
 
-  const clientParams = {
-    search: search || undefined,
+  // Permission gates
+  const canCreate = isAdmin || hasPermission("clients:create");
+  const canUpdate = isAdmin || hasPermission("clients:update:all") || hasPermission("clients:update:own");
+  const canDelete = isAdmin || hasPermission("clients:delete:all") || hasPermission("clients:delete:own");
+
+  const clientParams = useMemo(() => ({
+    search: search.trim() || undefined,
     status: (statusFilter || undefined) as ClientStatus | undefined,
+    tier: (tierFilter || undefined) as ClientTier | undefined,
+    sortBy,
+    sortOrder,
     limit: 100,
-  };
+  }), [search, statusFilter, tierFilter, sortBy, sortOrder]);
 
   const {
     data,
-    isLoading,
+    isLoading: isClientsLoading,
     error: queryError,
     invalidate: invalidateClients,
   } = useClients(clientParams);
 
-  const error = mutationError ?? queryError;
+  const clients = data?.clients || [];
 
-  // Filter clients by tier client-side for smooth UX
-  const filteredClients = useMemo(() => {
-    if (!data?.clients) return [];
-    if (!tierFilter) return data.clients;
-    return data.clients.filter((c) => c.tier === tierFilter);
-  }, [data?.clients, tierFilter]);
-
-  // Executive Stats Calculation
+  // Executive Stats derived globally from server
   const stats = useMemo(() => {
-    const clients = data?.clients || [];
+    if (globalStats) {
+      return {
+        total: globalStats.total,
+        active: globalStats.byStatus?.active ?? 0,
+        enterprise: globalStats.byTier?.enterprise ?? 0,
+        atRisk: globalStats.byStatus?.atRisk ?? 0,
+        prospects: globalStats.byStatus?.prospect ?? 0,
+      };
+    }
     const total = data?.total || clients.length;
     const active = clients.filter((c) => c.status === "active").length;
     const enterprise = clients.filter((c) => c.tier === "enterprise").length;
     const atRisk = clients.filter((c) => c.status === "at-risk").length;
     const prospects = clients.filter((c) => c.status === "prospect").length;
-
     return { total, active, enterprise, atRisk, prospects };
-  }, [data]);
+  }, [globalStats, data, clients]);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${name}" and all associated intelligence data? This action cannot be undone.`,
-      )
-    )
-      return;
-    setDeletingId(id);
-    setMutationError(null);
+  const handleDeleteConfirm = async () => {
+    if (!clientToDelete) return;
+    setDeletingId(clientToDelete.id);
     try {
-      await deleteClient.mutateAsync(id);
+      await deleteClient.mutateAsync(clientToDelete.id);
+      toast.success(`Account "${clientToDelete.name}" and associated records deleted`);
+      setClientToDelete(null);
       invalidateClients();
     } catch (err) {
-      setMutationError(
-        err instanceof Error ? err.message : "Failed to delete client account",
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to delete client account");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleTouchClient = async (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTouchingId(id);
+    try {
+      await touchClient.mutateAsync(id);
+      toast.success(`Touchpoint recorded for "${name}" (timestamp updated to now)`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update touchpoint");
+    } finally {
+      setTouchingId(null);
     }
   };
 
@@ -495,18 +836,30 @@ export default function AdminClientsPage() {
             </button>
           </div>
 
-          <Button
-            onClick={() => setShowCreate(true)}
-            className="gap-2 shadow-sm font-medium h-9"
-          >
-            <Plus className="w-4 h-4" /> Add Client
-          </Button>
+          {canCreate && (
+            <Button
+              onClick={() => setShowCreate(true)}
+              className="gap-2 shadow-sm font-medium h-9"
+            >
+              <Plus className="w-4 h-4" /> Add Client
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* ─── KPI Metrics Ribbon ───────────────────────────────────────────── */}
+      {/* ─── KPI Metrics Ribbon (Interactive) ──────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-xl border border-border bg-card shadow-sm hover:border-border/80 transition-all">
+        <button
+          onClick={() => {
+            setStatusFilter("");
+            setTierFilter("");
+          }}
+          className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+            statusFilter === "" && tierFilter === ""
+              ? "border-primary bg-primary/5 shadow-md"
+              : "border-border bg-card shadow-sm hover:border-border/80"
+          }`}
+        >
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
             <span className="font-medium">Total Accounts</span>
             <Users className="w-4 h-4 text-blue-500" />
@@ -517,9 +870,19 @@ export default function AdminClientsPage() {
           <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
             <span className="text-blue-500 font-semibold">{stats.prospects}</span> prospects in pipeline
           </div>
-        </div>
+        </button>
 
-        <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 shadow-sm">
+        <button
+          onClick={() => {
+            setStatusFilter("active");
+            setTierFilter("");
+          }}
+          className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+            statusFilter === "active"
+              ? "border-emerald-500 bg-emerald-500/15 shadow-md ring-1 ring-emerald-500/30"
+              : "border-emerald-500/20 bg-emerald-500/5 shadow-sm hover:border-emerald-500/40"
+          }`}
+        >
           <div className="flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-400 mb-1.5">
             <span className="font-medium">Active Accounts</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -530,9 +893,19 @@ export default function AdminClientsPage() {
           <div className="text-[11px] text-muted-foreground mt-1">
             Core ongoing relationships
           </div>
-        </div>
+        </button>
 
-        <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 shadow-sm">
+        <button
+          onClick={() => {
+            setTierFilter("enterprise");
+            setStatusFilter("");
+          }}
+          className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+            tierFilter === "enterprise"
+              ? "border-purple-500 bg-purple-500/15 shadow-md ring-1 ring-purple-500/30"
+              : "border-purple-500/20 bg-purple-500/5 shadow-sm hover:border-purple-500/40"
+          }`}
+        >
           <div className="flex items-center justify-between text-xs text-purple-600 dark:text-purple-400 mb-1.5">
             <span className="font-medium">Enterprise Tier</span>
             <Sparkles className="w-4 h-4 text-purple-500" />
@@ -543,9 +916,19 @@ export default function AdminClientsPage() {
           <div className="text-[11px] text-muted-foreground mt-1">
             High-value key clients
           </div>
-        </div>
+        </button>
 
-        <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 shadow-sm">
+        <button
+          onClick={() => {
+            setStatusFilter("at-risk");
+            setTierFilter("");
+          }}
+          className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+            statusFilter === "at-risk"
+              ? "border-amber-500 bg-amber-500/15 shadow-md ring-1 ring-amber-500/30"
+              : "border-amber-500/20 bg-amber-500/5 shadow-sm hover:border-amber-500/40"
+          }`}
+        >
           <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 mb-1.5">
             <span className="font-medium">At Risk / Attention</span>
             <ShieldAlert className="w-4 h-4 text-amber-500" />
@@ -556,7 +939,7 @@ export default function AdminClientsPage() {
           <div className="text-[11px] text-muted-foreground mt-1">
             Requires relationship follow-up
           </div>
-        </div>
+        </button>
       </div>
 
       {/* ─── Search & Segmented Filtering Bar ─────────────────────────────── */}
@@ -568,7 +951,7 @@ export default function AdminClientsPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search clients by name, industry, or contacts…"
+              placeholder="Search clients by name, industry, email, phone, or tags…"
               className="pl-9 pr-8 h-10 rounded-xl bg-card"
             />
             {search && (
@@ -591,10 +974,31 @@ export default function AdminClientsPage() {
               <option value="">All Account Tiers</option>
               {Object.entries(TIER_CONFIG).map(([val, cfg]) => (
                 <option key={val} value={val}>
-                  {cfg.label}
+                  {cfg.label} Tier
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Sort By Dropdown */}
+          <div className="w-full sm:w-48 flex items-center gap-1.5">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full h-10 rounded-xl border border-input bg-card px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="name">Sort: Name (A-Z)</option>
+              <option value="updatedAt">Sort: Recently Modified</option>
+              <option value="createdAt">Sort: Created Date</option>
+              <option value="lastContactedAt">Sort: Last Contacted</option>
+            </select>
+            <button
+              onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
+              className="h-10 px-2.5 rounded-xl border border-input bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center shrink-0"
+              title={`Order: ${sortOrder === "asc" ? "Ascending" : "Descending"}`}
+            >
+              <ArrowUpDown className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -613,6 +1017,15 @@ export default function AdminClientsPage() {
           {Object.entries(STATUS_CONFIG).map(([val, cfg]) => {
             const isSelected = statusFilter === val;
             const Icon = cfg.icon;
+            const count =
+              val === "active"
+                ? stats.active
+                : val === "prospect"
+                ? stats.prospects
+                : val === "at-risk"
+                ? stats.atRisk
+                : globalStats?.byStatus?.[val as keyof typeof globalStats.byStatus] ?? "";
+
             return (
               <button
                 key={val}
@@ -624,7 +1037,7 @@ export default function AdminClientsPage() {
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
-                {cfg.label}
+                {cfg.label} {count !== "" && `(${count})`}
               </button>
             );
           })}
@@ -632,15 +1045,15 @@ export default function AdminClientsPage() {
       </div>
 
       {/* ─── Error Alert ─────────────────────────────────────────────────── */}
-      {error && (
+      {queryError && (
         <div className="flex items-center gap-2.5 text-sm text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
           <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
+          <span>{queryError}</span>
         </div>
       )}
 
       {/* ─── Client Showcase ─────────────────────────────────────────────── */}
-      {isLoading ? (
+      {isClientsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
@@ -663,7 +1076,7 @@ export default function AdminClientsPage() {
             </div>
           ))}
         </div>
-      ) : filteredClients.length === 0 ? (
+      ) : clients.length === 0 ? (
         <Card className="p-16 text-center border-dashed rounded-2xl">
           <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-3 text-muted-foreground">
             <Building2 className="w-6 h-6" />
@@ -694,7 +1107,7 @@ export default function AdminClientsPage() {
       ) : viewMode === "grid" ? (
         /* ─── Grid View ──────────────────────────────────────────────────── */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClients.map((client) => {
+          {clients.map((client) => {
             const statusCfg =
               STATUS_CONFIG[client.status] ?? STATUS_CONFIG.active;
             const tierCfg = client.tier ? TIER_CONFIG[client.tier] : null;
@@ -736,22 +1149,33 @@ export default function AdminClientsPage() {
                         </div>
                       </div>
 
-                      {/* Quick Delete */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(client._id, client.name);
-                        }}
-                        disabled={deletingId === client._id}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all"
-                        title="Delete Client"
-                      >
-                        {deletingId === client._id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-3.5 h-3.5" />
+                      {/* Quick Actions (Edit & Delete) */}
+                      <div className="flex items-center gap-1">
+                        {canUpdate && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingClient(client);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                            title="Edit Client"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
                         )}
-                      </button>
+                        {canDelete && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setClientToDelete({ id: client._id, name: client.name });
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all"
+                            title="Delete Client"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Status & Tier Badges */}
@@ -767,11 +1191,18 @@ export default function AdminClientsPage() {
                         <span
                           className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${tierCfg.bg} ${tierCfg.text} ${tierCfg.border}`}
                         >
-                          {tierCfg.label}
+                          {tierCfg.label} Tier
                         </span>
                       )}
                     </div>
                   </div>
+
+                  {/* Summary Snippet */}
+                  {client.summary && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed pt-1">
+                      {client.summary}
+                    </p>
+                  )}
 
                   {/* Contacts & Channels Strip */}
                   <div className="pt-3 border-t border-border/60 space-y-2 text-xs text-muted-foreground">
@@ -783,6 +1214,21 @@ export default function AdminClientsPage() {
                       </span>
 
                       <div className="flex items-center gap-2">
+                        {/* 1-Click Touchpoint button */}
+                        <button
+                          onClick={(e) => handleTouchClient(client._id, client.name, e)}
+                          disabled={touchingId === client._id}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors"
+                          title="Register contact touchpoint right now"
+                        >
+                          {touchingId === client._id ? (
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                          ) : (
+                            <History className="w-2.5 h-2.5 text-primary" />
+                          )}
+                          Touch
+                        </button>
+
                         {client.email && (
                           <a
                             href={`mailto:${client.email}`}
@@ -818,24 +1264,32 @@ export default function AdminClientsPage() {
                       </div>
                     </div>
 
-                    {/* Tags */}
-                    {client.tags && client.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {client.tags.slice(0, 3).map((t) => (
-                          <span
-                            key={t}
-                            className="text-[10px] px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground font-medium"
-                          >
-                            #{t}
-                          </span>
-                        ))}
-                        {client.tags.length > 3 && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">
-                            +{client.tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Last contacted & tags */}
+                    <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
+                      <span className="text-muted-foreground/75 truncate">
+                        {client.lastContactedAt
+                          ? `Contacted: ${new Date(client.lastContactedAt).toLocaleDateString()}`
+                          : "Never contacted"}
+                      </span>
+
+                      {client.tags && client.tags.length > 0 && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          {client.tags.slice(0, 2).map((t) => (
+                            <span
+                              key={t}
+                              className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground font-medium"
+                            >
+                              #{t}
+                            </span>
+                          ))}
+                          {client.tags.length > 2 && (
+                            <span className="text-[10px] text-muted-foreground font-medium">
+                              +{client.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -859,12 +1313,13 @@ export default function AdminClientsPage() {
                   <th className="px-4 py-3.5">Status</th>
                   <th className="px-4 py-3.5">Tier</th>
                   <th className="px-4 py-3.5">Stakeholders</th>
+                  <th className="px-4 py-3.5">Last Contact</th>
                   <th className="px-4 py-3.5">Direct Channels</th>
                   <th className="px-4 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredClients.map((client) => {
+                {clients.map((client) => {
                   const statusCfg =
                     STATUS_CONFIG[client.status] ?? STATUS_CONFIG.active;
                   const tierCfg = client.tier ? TIER_CONFIG[client.tier] : null;
@@ -920,6 +1375,14 @@ export default function AdminClientsPage() {
                         </span>
                       </td>
 
+                      <td className="px-4 py-3.5 text-muted-foreground">
+                        {client.lastContactedAt ? (
+                          new Date(client.lastContactedAt).toLocaleDateString()
+                        ) : (
+                          <span className="text-muted-foreground/50">Never</span>
+                        )}
+                      </td>
+
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           {client.email && (
@@ -959,6 +1422,47 @@ export default function AdminClientsPage() {
 
                       <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={(e) => handleTouchClient(client._id, client.name, e)}
+                            disabled={touchingId === client._id}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                            title="Register contact touchpoint"
+                          >
+                            {touchingId === client._id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <History className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          {canUpdate && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingClient(client);
+                              }}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                              title="Edit Client Account"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setClientToDelete({ id: client._id, name: client.name });
+                              }}
+                              disabled={deletingId === client._id}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 opacity-0 group-hover:opacity-100 transition-all"
+                              title="Delete Client Account"
+                            >
+                              {deletingId === client._id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -968,23 +1472,8 @@ export default function AdminClientsPage() {
                               router.push(`/admin/clients/${client._id}`);
                             }}
                           >
-                            Open Profile <ChevronRight className="w-3 h-3" />
+                            Open <ChevronRight className="w-3 h-3" />
                           </Button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(client._id, client.name);
-                            }}
-                            disabled={deletingId === client._id}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 opacity-0 group-hover:opacity-100 transition-all"
-                            title="Delete"
-                          >
-                            {deletingId === client._id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-3.5 h-3.5" />
-                            )}
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1007,6 +1496,58 @@ export default function AdminClientsPage() {
           }}
         />
       )}
+
+      {/* ─── Edit Client Modal ───────────────────────────────────────────── */}
+      {editingClient && (
+        <EditClientModal
+          client={editingClient}
+          onClose={() => setEditingClient(null)}
+          onUpdated={() => {
+            invalidateClients();
+            setEditingClient(null);
+          }}
+        />
+      )}
+
+      {/* ─── Delete Confirmation Dialog ──────────────────────────────────── */}
+      <Dialog
+        open={!!clientToDelete}
+        onOpenChange={(open) => !open && setClientToDelete(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mb-2">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <DialogTitle>Delete Client Account</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong className="text-foreground">{clientToDelete?.name}</strong>? All associated observations, contacts, and historical timeline logs will be permanently removed. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setClientToDelete(null)}
+              disabled={!!deletingId}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={!!deletingId}
+              className="gap-2"
+            >
+              {deletingId ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              Confirm Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

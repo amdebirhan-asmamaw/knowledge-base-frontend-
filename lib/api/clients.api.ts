@@ -45,19 +45,44 @@ export interface Client {
   updatedAt: string;
 }
 
+export interface ObservationAuthor {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  position?: string;
+}
+
+export interface ObservationContact {
+  _id: string;
+  name: string;
+  role: ContactRole;
+  email?: string;
+  phone?: string;
+}
+
 export interface Observation {
   _id: string;
   clientId: string;
-  contactId?: string | null;
+  contactId?: string | ObservationContact | null;
   type: ObservationType;
   content: string;
   tags: string[];
   sentiment: SentimentType;
-  authorId: string;
+  authorId: string | ObservationAuthor;
   authorName: string;
   isPrivate: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AssignedEmployee {
+  _id: string;
+  name: string;
+  email: string;
+  position?: string;
+  department?: { _id: string; name: string } | string;
+  avatar?: string;
 }
 
 export interface ClientListResult {
@@ -68,8 +93,26 @@ export interface ClientListResult {
   pages: number;
 }
 
+export interface ClientStats {
+  total: number;
+  byStatus: {
+    active: number;
+    prospect: number;
+    atRisk: number;
+    paused: number;
+    churned: number;
+  };
+  byTier: {
+    enterprise: number;
+    midMarket: number;
+    smb: number;
+    startup: number;
+  };
+}
+
 export interface ClientDetail {
   client: Client;
+  assignedEmployees: AssignedEmployee[];
   typeCounts: Record<ObservationType, number>;
   contacts: Contact[];
   healthScore: number; // 0–100
@@ -83,10 +126,15 @@ export const listClients = (params?: {
   industry?: string;
   status?: ClientStatus;
   tier?: ClientTier;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
 }): Promise<ClientListResult> =>
   apiAxios.get("/clients", { params }).then((r) => r.data.data);
+
+export const getClientStats = (): Promise<ClientStats> =>
+  apiAxios.get("/clients/stats").then((r) => r.data.data);
 
 export const getClient = (id: string): Promise<ClientDetail> =>
   apiAxios.get(`/clients/${id}`).then((r) => r.data.data);
@@ -98,6 +146,15 @@ export const updateClient = (id: string, data: Partial<Client>): Promise<Client>
   apiAxios.put(`/clients/${id}`, data).then((r) => r.data.data);
 
 export const deleteClient = (id: string) => apiAxios.delete(`/clients/${id}`);
+
+export const touchClient = (id: string): Promise<Client> =>
+  apiAxios.post(`/clients/${id}/touch`).then((r) => r.data.data);
+
+export const assignEmployeesToClient = (
+  id: string,
+  employeeIds: string[]
+): Promise<{ client: Client; assignedEmployees: AssignedEmployee[] }> =>
+  apiAxios.put(`/clients/${id}/assign-employees`, { employeeIds }).then((r) => r.data.data);
 
 // ─── Contact CRUD ──────────────────────────────────────────────────────────────
 
@@ -140,3 +197,4 @@ export const updateObservation = (
 
 export const deleteObservation = (clientId: string, obsId: string) =>
   apiAxios.delete(`/clients/${clientId}/observations/${obsId}`);
+

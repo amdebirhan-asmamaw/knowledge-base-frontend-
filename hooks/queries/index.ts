@@ -1,6 +1,6 @@
 export { useEmployees, useEmployeeMutations } from "./use-employees";
 export { useDepartments, useDepartmentDetail, useDepartmentMutations } from "./use-departments";
-export { useClients, useClientDetail, useClientMutations } from "./use-clients";
+export { useClients, useClientDetail, useClientMutations, useClientStats } from "./use-clients";
 export { useFaqs, useFaqMutations } from "./use-faqs";
 export { useReports, useReportMutations } from "./use-reports";
 export { useMeetings, useMeetingMutations } from "./use-meetings";
