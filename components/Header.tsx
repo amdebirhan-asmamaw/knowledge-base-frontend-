@@ -8,6 +8,7 @@ import { LayoutDashboard, LogOut, ChevronDown, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { AppLogo } from '@/components/AppLogo';
 import { appConfig } from '@/config/app.config';
+import { openAiAssistant } from '@/components/FloatingAiAssistant';
 
 
 interface HeaderProps {
@@ -96,6 +97,12 @@ export function Header({ showNav = true }: HeaderProps) {
                   <Link
                     key={href}
                     href={href}
+                    onClick={(e) => {
+                      if (href === '/ask-ai') {
+                        e.preventDefault();
+                        openAiAssistant();
+                      }
+                    }}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       isActive
                         ? 'text-primary bg-primary/8'

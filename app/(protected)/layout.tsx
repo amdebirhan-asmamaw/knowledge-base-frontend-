@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { PolicyGuard } from "@/components/PolicyGuard";
 import { Loader2 } from "lucide-react";
 import { Footer } from "@/components/Footer";
+import { FloatingAiAssistant } from "@/components/FloatingAiAssistant";
 
 export default function PublicLayout({
   children,
@@ -44,6 +45,9 @@ export default function PublicLayout({
         <div className="min-h-[calc(100vh-4rem)]">{children}</div>
       </PolicyGuard>
       <Footer />
+      <div className="print:hidden">
+        <FloatingAiAssistant />
+      </div>
     </>
   );
 }
