@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { canUserPerformAction } from "@/lib/permissions";
 import {
   type TaskReport,
   type TaskReportFilters,
@@ -323,6 +325,7 @@ function ReportDetail({
   onUnpublish,
   isPublishing,
   canModify,
+  canDelete,
 }: {
   report: TaskReport;
   onBack: () => void;
@@ -332,6 +335,7 @@ function ReportDetail({
   onUnpublish?: () => void;
   isPublishing?: boolean;
   canModify: boolean;
+  canDelete: boolean;
 }) {
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
@@ -427,14 +431,16 @@ function ReportDetail({
                 >
                   <Edit3 className="w-3 h-3" /> Edit
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 text-xs text-red-600 hover:bg-red-50 hover:border-red-300"
-                  onClick={onDelete}
-                >
-                  <Trash2 className="w-3 h-3" /> Delete
-                </Button>
+                {canDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 text-xs text-red-600 hover:bg-red-50 hover:border-red-300 dark:hover:bg-red-950/40"
+                    onClick={onDelete}
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -611,6 +617,10 @@ function ReportForm({
     }
     if (!form.periodStart || !form.periodEnd) {
       setError("Please provide both period start and end dates.");
+      return;
+    }
+    if (new Date(form.periodEnd) < new Date(form.periodStart)) {
+      setError("Period end date cannot be earlier than period start date.");
       return;
     }
 
@@ -941,13 +951,15 @@ function ReportForm({
 type View = "list" | "detail" | "create" | "edit";
 
 export default function AdminReportsPage() {
-  const { user, hasPermission } = useAuth();
+  const { user, permissions = [] } = useAuth();
   const [view, setView] = useState<View>("list");
   const [selectedReport, setSelectedReport] = useState<TaskReport | null>(null);
   const { createTaskReport, updateTaskReport, deleteTaskReport } =
     useReportMutations();
 
   // Filters
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterPeriod, setFilterPeriod] = useState<PeriodType | "">("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState<ReportStatus | "">("");
@@ -957,6 +969,15 @@ export default function AdminReportsPage() {
   const [datePreset, setDatePreset] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const applyDatePreset = (key: string) => {
     setDatePreset(key);
@@ -968,6 +989,7 @@ export default function AdminReportsPage() {
 
   // ── Build filters ───────────────────────────────────────────────────────
   const reportFilters: TaskReportFilters = { page, limit: 15 };
+  if (debouncedSearch.trim()) reportFilters.search = debouncedSearch.trim();
   if (filterPeriod) reportFilters.periodType = filterPeriod;
   if (filterDept) reportFilters.department = filterDept;
   if (filterStatus) reportFilters.status = filterStatus;
@@ -989,34 +1011,70 @@ export default function AdminReportsPage() {
   const { departments } = useDepartments({ isActive: true });
 
   const handleCreate = async (data: CreateTaskReportData) => {
-    await createTaskReport.mutateAsync(data);
-    setView("list");
-    setPage(1);
-    invalidateReports();
+    try {
+      await createTaskReport.mutateAsync(data);
+      toast.success(data.status === "draft" ? "Draft saved successfully" : "Report submitted successfully");
+      setView("list");
+      setPage(1);
+      invalidateReports();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create report");
+      throw err;
+    }
   };
 
   const handleUpdate = async (data: CreateTaskReportData) => {
     if (!selectedReport) return;
-    const updated = await updateTaskReport.mutateAsync({
-      id: selectedReport._id,
-      data,
-    });
-    setSelectedReport(updated);
-    setView("detail");
-    invalidateReports();
+    try {
+      const updated = await updateTaskReport.mutateAsync({
+        id: selectedReport._id,
+        data,
+      });
+      setSelectedReport(updated);
+      toast.success(data.status === "draft" ? "Draft updated" : "Report updated successfully");
+      setView("detail");
+      invalidateReports();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update report");
+      throw err;
+    }
   };
 
   const handleDelete = async () => {
     if (!selectedReport) return;
     if (!confirm("Delete this report? This cannot be undone.")) return;
-    await deleteTaskReport.mutateAsync(selectedReport._id);
-    setSelectedReport(null);
-    setView("list");
-    invalidateReports();
+    try {
+      await deleteTaskReport.mutateAsync(selectedReport._id);
+      toast.success("Report deleted successfully");
+      setSelectedReport(null);
+      setView("list");
+      invalidateReports();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete report");
+    }
   };
 
   const canModify = (report: TaskReport) =>
-    user?.id === report.author?._id || hasPermission("reports:update:all");
+    canUserPerformAction({
+      userId: user?.id,
+      userDepartmentId: (user as any)?.departmentId,
+      userPermissions: permissions,
+      entityAuthorId: report.author?._id,
+      entityDepartmentId: report.department?._id,
+      domain: "reports",
+      action: "update",
+    });
+
+  const canDelete = (report: TaskReport) =>
+    canUserPerformAction({
+      userId: user?.id,
+      userDepartmentId: (user as any)?.departmentId,
+      userPermissions: permissions,
+      entityAuthorId: report.author?._id,
+      entityDepartmentId: report.department?._id,
+      domain: "reports",
+      action: "delete",
+    });
 
   const [publishingId, setPublishingId] = useState<string | null>(null);
 
@@ -1030,7 +1088,10 @@ export default function AdminReportsPage() {
       if (selectedReport?._id === report._id) {
         setSelectedReport(updated);
       }
+      toast.success(`Published "${report.title}"`);
       invalidateReports();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to publish report");
     } finally {
       setPublishingId(null);
     }
@@ -1046,14 +1107,24 @@ export default function AdminReportsPage() {
       if (selectedReport?._id === report._id) {
         setSelectedReport(updated);
       }
+      toast.success(`Reverted "${report.title}" to draft`);
       invalidateReports();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to revert report");
     } finally {
       setPublishingId(null);
     }
   };
 
   const hasFilters =
-    filterPeriod || filterDept || filterStatus || filterVisibility || myReportsOnly || dateFrom || dateTo;
+    !!debouncedSearch.trim() ||
+    !!filterPeriod ||
+    !!filterDept ||
+    !!filterStatus ||
+    !!filterVisibility ||
+    myReportsOnly ||
+    !!dateFrom ||
+    !!dateTo;
 
   // ── Detail View ──
   if (view === "detail" && selectedReport) {
@@ -1070,6 +1141,7 @@ export default function AdminReportsPage() {
         onUnpublish={() => handleUnpublish(selectedReport)}
         isPublishing={publishingId === selectedReport._id}
         canModify={canModify(selectedReport)}
+        canDelete={canDelete(selectedReport)}
       />
     );
   }
@@ -1193,8 +1265,28 @@ export default function AdminReportsPage() {
 
       {/* ── Filters ── */}
       <Card className="border shadow-sm overflow-hidden">
-        {/* Row 1: Period type + dropdowns */}
+        {/* Row 1: Search + Period type + dropdowns */}
         <div className="px-4 py-2.5 flex items-center gap-3 flex-wrap">
+          {/* Live Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search reports by title or content..."
+              className="h-8 pl-8 pr-7 text-xs bg-background"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           {/* Period tabs */}
           <div className="flex items-center gap-0.5 p-0.5 bg-secondary rounded-lg">
             {PERIOD_TYPES.map((p) => (
@@ -1278,6 +1370,8 @@ export default function AdminReportsPage() {
                 size="sm"
                 className="h-8 text-xs gap-1 text-muted-foreground hover:text-red-600 hover:bg-red-50"
                 onClick={() => {
+                  setSearch("");
+                  setDebouncedSearch("");
                   setFilterPeriod("");
                   setFilterDept("");
                   setFilterStatus("");

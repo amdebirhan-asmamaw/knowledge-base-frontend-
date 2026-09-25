@@ -70,6 +70,7 @@ export interface TaskReportListResponse {
 export interface TaskReportFilters {
   page?: number;
   limit?: number;
+  search?: string;
   periodType?: PeriodType;
   department?: string;
   author?: string;
@@ -126,18 +127,26 @@ function buildReportFormData(
   if (data.nextPlan !== undefined) fd.append("nextPlan", data.nextPlan);
   if (data.visibility !== undefined) fd.append("visibility", data.visibility);
 
-  if (data.allowedViewers && data.allowedViewers.length > 0) {
-    data.allowedViewers.forEach((v) => fd.append("allowedViewers", v));
+  if (data.allowedViewers !== undefined) {
+    if (data.allowedViewers.length > 0) {
+      data.allowedViewers.forEach((v) => fd.append("allowedViewers", v));
+    } else {
+      fd.append("allowedViewers", "[]");
+    }
   }
 
   if (data.files && data.files.length > 0) {
     data.files.forEach((file) => fd.append("files", file));
   }
 
-  if ("deletedAttachmentPublicIds" in data && data.deletedAttachmentPublicIds) {
-    data.deletedAttachmentPublicIds.forEach((id) =>
-      fd.append("deletedAttachmentPublicIds", id),
-    );
+  if ("deletedAttachmentPublicIds" in data && data.deletedAttachmentPublicIds !== undefined) {
+    if (data.deletedAttachmentPublicIds.length > 0) {
+      data.deletedAttachmentPublicIds.forEach((id) =>
+        fd.append("deletedAttachmentPublicIds", id),
+      );
+    } else {
+      fd.append("deletedAttachmentPublicIds", "[]");
+    }
   }
 
   return fd;
@@ -232,9 +241,10 @@ export const deleteTaskReport = (id: string): Promise<void> =>
 export const listPublicTaskReports = (
   filters?: Pick<
     TaskReportFilters,
-    "page" | "limit" | "periodType" | "department" | "sortBy" | "sortOrder"
+    "page" | "limit" | "search" | "periodType" | "department" | "sortBy" | "sortOrder"
   >,
 ): Promise<TaskReportListResponse> =>
   apiAxios
     .get("/reports/task-reports/public", { params: filters })
     .then((r) => r.data.data);
+

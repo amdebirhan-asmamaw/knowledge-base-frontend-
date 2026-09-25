@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   listPublicTaskReports,
@@ -11,6 +11,7 @@ import {
 import { listDepartments, type Department } from "@/lib/api/departments.api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageShell";
 import { ReportAttachmentViewer } from "@/components/ReportAttachmentViewer";
@@ -29,16 +30,20 @@ import {
   Download,
   Paperclip,
   Plus,
+  Search,
+  X,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PERIOD_TYPES: { value: PeriodType | ""; label: string }[] = [
   { value: "", label: "All Periods" },
+  { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
   { value: "quarterly", label: "Quarterly" },
 ];
+
 
 const PERIOD_BADGE_COLORS: Record<PeriodType, string> = {
   daily: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -251,14 +256,29 @@ function ReportDetailView({
 
 export default function PublicReportsPage() {
   const [selectedReport, setSelectedReport] = useState<TaskReport | null>(null);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterPeriod, setFilterPeriod] = useState<PeriodType | "">("");
   const [filterDept, setFilterDept] = useState("");
   const [page, setPage] = useState(1);
 
-  const filters: Pick<TaskReportFilters, "page" | "limit" | "periodType" | "department"> = {
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const filters: Pick<
+    TaskReportFilters,
+    "page" | "limit" | "search" | "periodType" | "department"
+  > = {
     page,
     limit: 12,
   };
+  if (debouncedSearch.trim()) filters.search = debouncedSearch.trim();
   if (filterPeriod) filters.periodType = filterPeriod;
   if (filterDept) filters.department = filterDept;
 
@@ -282,7 +302,7 @@ export default function PublicReportsPage() {
   const error =
     queryError instanceof Error ? queryError.message : queryError ? String(queryError) : null;
 
-  const hasFilters = !!filterPeriod || !!filterDept;
+  const hasFilters = !!debouncedSearch.trim() || !!filterPeriod || !!filterDept;
 
   // ─── Detail view ──────────────────────────────────────────────────────────
   if (selectedReport) {
@@ -313,56 +333,78 @@ export default function PublicReportsPage() {
         </Link>
       </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Filter:</span>
-          </div>
-          <select
-            value={filterPeriod}
-            onChange={(e) => {
-              setFilterPeriod(e.target.value as PeriodType | "");
-              setPage(1);
-            }}
-            className="h-8 rounded-md border border-input bg-background px-2.5 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {PERIOD_TYPES.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filterDept}
-            onChange={(e) => {
-              setFilterDept(e.target.value);
-              setPage(1);
-            }}
-            className="h-8 rounded-md border border-input bg-background px-2.5 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">All Departments</option>
-            {departments.map((d) => (
-              <option key={d._id} value={d._id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs h-8 gap-1"
-              onClick={() => {
-                setFilterPeriod("");
-                setFilterDept("");
-                setPage(1);
-              }}
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search reports by title..."
+            className="h-8 pl-8 pr-7 text-xs bg-background"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              Clear
-            </Button>
+              <X className="w-3 h-3" />
+            </button>
           )}
         </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Filter className="w-3.5 h-3.5" />
+          <span>Filter:</span>
+        </div>
+        <select
+          value={filterPeriod}
+          onChange={(e) => {
+            setFilterPeriod(e.target.value as PeriodType | "");
+            setPage(1);
+          }}
+          className="h-8 rounded-md border border-input bg-background px-2.5 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          {PERIOD_TYPES.map((p) => (
+            <option key={p.value} value={p.value}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={filterDept}
+          onChange={(e) => {
+            setFilterDept(e.target.value);
+            setPage(1);
+          }}
+          className="h-8 rounded-md border border-input bg-background px-2.5 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="">All Departments</option>
+          {departments.map((d) => (
+            <option key={d._id} value={d._id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+        {hasFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-8 gap-1 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+            onClick={() => {
+              setSearch("");
+              setDebouncedSearch("");
+              setFilterPeriod("");
+              setFilterDept("");
+              setPage(1);
+            }}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
 
         {/* Loading */}
         {isLoading && (

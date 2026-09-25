@@ -181,6 +181,56 @@ export function hasScopePermission(
   return false;
 }
 
+/**
+ * Checks whether a user can perform an action on a target entity based on 3-tier ownership/dept/all hierarchy.
+ */
+export function canUserPerformAction(params: {
+  userId?: string | null;
+  userDepartmentId?: string | null;
+  userPermissions?: string[];
+  entityAuthorId?: string | null;
+  entityDepartmentId?: string | null;
+  domain: string;
+  action: string;
+}): boolean {
+  const {
+    userId,
+    userDepartmentId,
+    userPermissions = [],
+    entityAuthorId,
+    entityDepartmentId,
+    domain,
+    action,
+  } = params;
+
+  // 1. 'all' scope allows action on any entity
+  if (hasScopePermission(userPermissions, domain, action, 'all')) {
+    return true;
+  }
+
+  // 2. 'dept' scope allows action if in the same department
+  if (
+    userDepartmentId &&
+    entityDepartmentId &&
+    userDepartmentId.toString() === entityDepartmentId.toString() &&
+    hasScopePermission(userPermissions, domain, action, 'dept')
+  ) {
+    return true;
+  }
+
+  // 3. 'own' scope allows action if user is the author/owner
+  if (
+    entityAuthorId &&
+    userId &&
+    userId.toString() === entityAuthorId.toString() &&
+    hasScopePermission(userPermissions, domain, action, 'own')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export const PERMISSION_LABELS: Record<Permission, { label: string; description: string; group: string; tier?: Scope }> = {
   // Clients
   'clients:create': { label: 'Create Clients', description: 'Create new client profiles', group: 'Clients' },
